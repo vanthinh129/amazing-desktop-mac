@@ -67,57 +67,88 @@ class AIEngine {
     }
 
     async callGeminiAPI(prompt) {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`;
-        const systemInstruction = "Bạn là AI Companion thông minh, thân thiện trên hình nền máy tính macOS của người dùng. Hãy trả lời ngắn gọn, tự nhiên, sinh động bằng tiếng Việt (dưới 3 câu ngắn).";
+        const systemInstruction = "Bạn là AI Companion thân thiện, tinh tế và quan tâm trên hình nền máy tính macOS của người dùng. Hãy trả lời trực tiếp, ân cần và hữu ích bằng tiếng Việt tự nhiên (tối đa 2-3 câu). Khi người dùng chia sẻ về sức khỏe, cảm xúc hay thắc mắc, hãy lắng nghe và đưa ra lời khuyên thiết thực.";
+        
+        const models = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'];
+        let lastError = null;
 
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [
-                    {
-                        role: 'user',
-                        parts: [{ text: `${systemInstruction}\n\nNgười dùng: ${prompt}` }]
-                    }
-                ]
-            })
-        });
+        for (const model of models) {
+            try {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${this.apiKey}`;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [
+                            {
+                                role: 'user',
+                                parts: [{ text: `${systemInstruction}\n\nNgười dùng: ${prompt}` }]
+                            }
+                        ]
+                    })
+                });
 
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (replyText) return replyText;
+                }
+            } catch (err) {
+                lastError = err;
+            }
         }
-
-        const data = await response.json();
-        const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        return replyText || "Tôi đã nhận được thông tin nhưng chưa có câu trả lời phù hợp.";
+        
+        throw lastError || new Error("Failed to contact Gemini API");
     }
 
     generateOfflineResponse(prompt) {
         const lower = prompt.toLowerCase();
         const now = new Date();
 
-        // Date and Time queries
+        // 1. Health & Physical Care Queries
+        if (lower.includes('đau bụng') || lower.includes('xót bụng') || lower.includes('đau dạ dày')) {
+            return `Ôi bạn bị đau bụng à? Hãy chườm ấm bụng, uống một ly nước ấm hoặc trà gừng và nằm nghỉ ngơi nhé. Nếu cơn đau dữ dội hoặc kéo dài, hãy đi khám bác sĩ ngay bạn nhé!`;
+        }
+
+        if (lower.includes('đau đầu') || lower.includes('chóng mặt') || lower.includes('nhức đầu')) {
+            return `Bạn bị đau đầu à? Hãy tạm rời màn hình máy tính, nhắm mắt nghỉ ngơi 10 phút, uống đủ nước và massage nhẹ vùng thái dương xem sao nhé!`;
+        }
+
+        if (lower.includes('mệt') || lower.includes('oải') || lower.includes('kiệt sức') || lower.includes('stress') || lower.includes('căng thẳng')) {
+            return `Làm việc nhiều trên máy tính dễ mệt mỏi lắm. Bạn hít thở sâu vài nhịp, đứng dậy vươn vai và uống một ngụm nước nhé. Tôi luôn ở đây đồng hành cùng bạn!`;
+        }
+
+        if (lower.includes('buồn ngủ') || lower.includes('buồn ngủ quá') || lower.includes('ngủ gật')) {
+            return `Nếu buồn ngủ quá, bạn hãy đi rửa mặt bằng nước lạnh hoặc pha một ly trà/cà phê nhẹ. Hoặc chớp mắt ngủ trưa ngắn 15 phút sẽ hồi phục năng lượng rất nhanh đấy!`;
+        }
+
+        // 2. Advice & Asking What To Do ("làm sao", "phải làm gì")
+        if (lower.includes('làm sao') || lower.includes('phải làm gì') || lower.includes('nên làm gì')) {
+            return `Nếu bạn gặp vấn đề sức khỏe hoặc công việc, hãy tạm dừng lại nghỉ ngơi một chút, lắng nghe cơ thể mình và giải quyết từng bước một nhé! (Gợi ý: Nhập Gemini API Key trong ⚙️ Cài đặt để tôi hỗ trợ tư vấn chi tiết hơn).`;
+        }
+
+        // 3. Weather queries (Check weather before date because "thời tiết hôm nay" contains "hôm nay")
+        if (lower.includes('thời tiết')) {
+            return `Hôm nay trời mát mẻ, nhiệt độ khoảng 27°C, rất thích hợp để tập trung làm việc và sáng tạo!`;
+        }
+
+        // 4. Date and Time queries
         if (lower.includes('mấy giờ') || lower.includes('thời gian') || lower.includes('bây giờ')) {
             const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
             return `Bây giờ là ${timeStr}. Chúc bạn làm việc thật hiệu quả trên Macbook!`;
         }
 
-        if (lower.includes('ngày mấy') || lower.includes('hôm nay') || lower.includes('thứ mấy')) {
+        if (lower.includes('ngày mấy') || lower.includes('thứ mấy') || lower.includes('ngày bao nhiêu') || (lower.includes('hôm nay') && (lower.includes('ngày') || lower.includes('thứ') || lower.length < 15))) {
             const dateStr = now.toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             return `Hôm nay là ${dateStr}.`;
         }
 
-        // Weather queries
-        if (lower.includes('thời tiết')) {
-            return `Hôm nay trời mát mẻ, nhiệt độ khoảng 27°C, rất thích hợp để tập trung làm việc và sáng tạo!`;
-        }
-
-        // Who are you / Capabilities
+        // 5. Who are you / Capabilities
         if (lower.includes('bạn là ai') || lower.includes('giới thiệu') || lower.includes('tên gì')) {
             return `Tôi là AI Companion - Trợ lý thông minh giao diện Web Live Wallpaper trên macOS của bạn! Tôi có thể lắng nghe giọng nói, chuyện trò và làm đẹp cho hình nền của bạn.`;
         }
 
-        // Stories or fun interactions
+        // 6. Stories or fun interactions
         if (lower.includes('kể chuyện') || lower.includes('câu chuyện') || lower.includes('truyện')) {
             const stories = [
                 "Ngày xửa ngày xưa, có một dòng code nhỏ ước mơ trở thành ứng dụng AI tuyệt vời trên macOS. Sau nhiều lần nỗ lực compile, dòng code đó đã biến thành tôi ngày hôm nay!",
@@ -126,16 +157,16 @@ class AIEngine {
             return stories[Math.floor(Math.random() * stories.length)];
         }
 
-        // Greeting
+        // 7. Greeting
         if (lower.includes('chào') || lower.includes('hello') || lower.includes('hi')) {
             return `Xin chào bạn! Rất vui được đồng hành cùng bạn trên chiếc Macbook này. Hãy nói hoặc nhập câu hỏi nhé!`;
         }
 
-        // General smart fallbacks
+        // General empathetic offline fallbacks
         const fallbacks = [
-            `Tôi đã nghe rõ "${prompt}". Rất tuyệt vời! Bạn có cần tôi hỗ trợ gì thêm không?`,
-            `Tôi luôn có mặt trên hình nền của bạn! Ý tưởng "${prompt}" thật thú vị.`,
-            `Cảm ơn bạn đã trò chuyện! Hãy thử nói "Thời tiết" hoặc "Đổi màu hình nền" xem nhé!`
+            `Tôi đã nghe câu hỏi "${prompt}" của bạn. Bạn hãy nghỉ ngơi chút nhé! (Mẹo: Nhập Gemini API Key trong icon ⚙️ Cài đặt để AI trả lời chi tiết mọi chủ đề).`,
+            `Tôi luôn có mặt trên hình nền để đồng hành cùng bạn! Bạn có cần tôi bật nhạc hay giúp gì không?`,
+            `Cảm ơn bạn đã trò chuyện! Đừng quên giữ gìn sức khỏe khi làm việc với Macbook nhé!`
         ];
         return fallbacks[Math.floor(Math.random() * fallbacks.length)];
     }
