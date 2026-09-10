@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,32 +8,39 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body class="theme-cyan">
     <!-- Dynamic Ambient Background Canvas -->
     <canvas id="bgCanvas"></canvas>
 
     <!-- Main Wallpaper Container -->
     <main class="wallpaper-container">
-        
+
         <!-- Top Status Bar & Clock Widget -->
         <header class="top-bar">
             <div class="clock-widget glass-card">
-                <div class="time-display" id="timeDisplay">00:00<span class="seconds-display" id="secondsDisplay">:00</span></div>
+                <div class="time-display" id="timeDisplay">00:00<span class="seconds-display"
+                        id="secondsDisplay">:00</span></div>
                 <div class="date-display" id="dateDisplay">Thứ Năm, 10 Tháng 9, 2026</div>
             </div>
 
             <div class="ai-status-widget glass-card">
                 <div class="status-indicator" id="statusIndicator">
                     <span class="status-dot"></span>
-                    <span class="status-text" id="statusText">AI Ready • Sẵn sàng nghe</span>
+                    <!-- <span class="status-text" id="statusText">AI Ready • Sẵn sàng nghe</span> -->
                 </div>
                 <button class="settings-toggle-btn" id="settingsToggleBtn" title="Cài đặt & Theme">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="3"></circle>
-                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                        </path>
                     </svg>
                 </button>
             </div>
@@ -43,7 +51,8 @@
             <!-- Floating Speech Bubble Overlay -->
             <div class="speech-bubble glass-card" id="speechBubble">
                 <div class="bubble-tag" id="bubbleTag">AI Companion</div>
-                <div class="bubble-content" id="bubbleText">Xin chào! Tôi là AI Companion trên hình nền của bạn. Hãy nhấn nút micro hoặc nói chuyện để giao tiếp!</div>
+                <div class="bubble-content" id="bubbleText">Xin chào! Tôi là AI Companion trên hình nền của bạn. Hãy
+                    nhấn nút micro hoặc nói chuyện để giao tiếp!</div>
             </div>
 
             <!-- Canvas AI Character & Audio Visualizer Ring -->
@@ -63,14 +72,14 @@
 
         <!-- Right Side 3D Spatial Gallery Slider Widget -->
         <aside class="spatial-slider-widget glass-card">
-            <div class="slider-widget-header">
+            <!-- <div class="slider-widget-header">
                 <div class="slider-header-title">
                     <span class="slider-icon">🖼️</span>
                     <h3>Bộ sưu tập 3D</h3>
                 </div>
                 <span class="active-slide-badge" id="slideBadge">1 / 6</span>
-            </div>
-            
+            </div> -->
+
             <div class="slider-3d-stage" id="slider3DStage">
                 <div class="slider-3d-carousel" id="slider3DCarousel">
                     <!-- 3D Cards rendered dynamically by js/slider.js -->
@@ -85,7 +94,7 @@
                     </div>
                     <button class="slider-nav-btn" id="nextSlideBtn" title="Hình sau">&rang;</button>
                 </div>
-                <small class="slider-hint">Tự động xoay 5s • Nguồn: <code>images/</code></small>
+                <!-- <small class="slider-hint">Tự động xoay 5s • Nguồn: <code>images/</code></small> -->
             </div>
         </aside>
 
@@ -93,7 +102,8 @@
         <footer class="bottom-bar">
             <div class="chat-input-wrapper glass-card">
                 <button class="mic-btn" id="micBtn" title="Bật/Tắt Micro lắng nghe">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
                         <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
                         <line x1="12" y1="19" x2="12" y2="23"></line>
@@ -102,7 +112,8 @@
                 </button>
                 <input type="text" id="chatInput" placeholder="Nói hoặc nhập câu hỏi cho AI..." autocomplete="off">
                 <button class="send-btn" id="sendBtn" title="Gửi tin nhắn">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
                         <line x1="22" y1="2" x2="11" y2="13"></line>
                         <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                     </svg>
@@ -158,4 +169,5 @@
     <script src="js/slider.js"></script>
     <script src="js/app.js"></script>
 </body>
+
 </html>
