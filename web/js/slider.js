@@ -104,7 +104,7 @@ class Spatial3DSlider {
 
             const title = document.createElement('div');
             title.className = 'card-title';
-            title.textContent = item.title;
+            // title.textContent = item.title;
 
             const indexBadge = document.createElement('span');
             indexBadge.className = 'card-index-tag';
