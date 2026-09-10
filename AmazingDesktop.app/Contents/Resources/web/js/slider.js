@@ -31,14 +31,27 @@ class Spatial3DSlider {
     init() {
         if (!this.carousel) return;
 
+        this.shuffleArray(this.items);
         this.renderCards();
         this.update3DPositions();
         this.startAutoPlay();
         this.bindEvents();
     }
 
+    shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
     loadCustomImages(imageUrls) {
         if (!Array.isArray(imageUrls) || imageUrls.length === 0) return;
+
+        // Shuffle images randomly on each load
+        const shuffledUrls = [...imageUrls];
+        this.shuffleArray(shuffledUrls);
 
         const gradients = [
             "linear-gradient(135deg, #00f0ff, #7000ff)",
@@ -49,7 +62,7 @@ class Spatial3DSlider {
             "linear-gradient(135deg, #f43f5e, #fb923c)"
         ];
 
-        this.items = imageUrls.map((url, idx) => {
+        this.items = shuffledUrls.map((url, idx) => {
             // Extract filename for title
             const parts = url.split('/');
             let rawFilename = parts[parts.length - 1] || `Image ${idx + 1}`;
