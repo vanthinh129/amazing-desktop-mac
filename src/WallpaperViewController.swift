@@ -135,7 +135,10 @@ class WallpaperViewController: NSViewController, WKUIDelegate, WKNavigationDeleg
         }
         processDirectory(webImagesDir)
         
-        print("[WallpaperViewController] Successfully scanned & synced \(relativeImagePaths.count) unique images for WebKit.")
+        // Shuffle image list randomly so every app launch starts with a fresh order
+        relativeImagePaths.shuffle()
+        
+        print("[WallpaperViewController] Successfully scanned & synced \(relativeImagePaths.count) unique images (shuffled).")
         
         if let jsonData = try? JSONSerialization.data(withJSONObject: relativeImagePaths),
            let jsonString = String(data: jsonData, encoding: .utf8) {
