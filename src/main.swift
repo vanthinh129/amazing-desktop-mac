@@ -18,18 +18,26 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     func setupWallpaperWindow() {
         guard let mainScreen = NSScreen.main else { return }
-        let screenFrame = mainScreen.frame
+        let fullFrame = mainScreen.frame
+        let visibleFrame = mainScreen.visibleFrame
         
-        wallpaperWindow = DesktopWallpaperWindow(contentRect: screenFrame)
+        // Exclude top menu bar area, extend to bottom edge (y = 0)
+        let topMenuHeight = max(0, fullFrame.height - (visibleFrame.origin.y + visibleFrame.height))
+        let wallpaperFrame = NSRect(
+            x: 0,
+            y: 0,
+            width: fullFrame.width,
+            height: fullFrame.height - topMenuHeight
+        )
+        
+        wallpaperWindow = DesktopWallpaperWindow(contentRect: wallpaperFrame)
         wallpaperVC = WallpaperViewController()
         
         wallpaperWindow.contentViewController = wallpaperVC
-        wallpaperWindow.setFrame(screenFrame, display: true)
-        
-        // Apply interactive mode (adjusts window level to receive mouse events)
+        wallpaperWindow.setFrame(wallpaperFrame, display: true)
         wallpaperWindow.setInteractive(isInteractive)
         
-        print("[AmazingDesktop] Wallpaper Window initialized on screen: \(screenFrame), interactive: \(isInteractive)")
+        print("[AmazingDesktop] Wallpaper Window initialized frame: \(wallpaperFrame)")
         fflush(stdout)
     }
     
