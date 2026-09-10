@@ -444,11 +444,11 @@ html, body {
 
 .spatial-slider-widget {
     position: fixed;
-    right: 2.5rem;
+    right: 2rem;
     top: 50%;
     transform: translateY(-55%);
-    width: 320px;
-    height: 470px;
+    width: 360px;
+    height: 480px;
     padding: 1.25rem;
     display: flex;
     flex-direction: column;
