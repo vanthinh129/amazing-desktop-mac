@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazing Desktop Mac - Interactive AI Web Wallpaper</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="theme-cyan">
+    <!-- Dynamic Ambient Background Canvas -->
+    <canvas id="bgCanvas"></canvas>
+
+    <!-- Main Wallpaper Container -->
+    <main class="wallpaper-container">
+        
+        <!-- Top Status Bar & Clock Widget -->
+        <header class="top-bar">
+            <div class="clock-widget glass-card">
+                <div class="time-display" id="timeDisplay">00:00<span class="seconds-display" id="secondsDisplay">:00</span></div>
+                <div class="date-display" id="dateDisplay">Thứ Năm, 10 Tháng 9, 2026</div>
+            </div>
+
+            <div class="ai-status-widget glass-card">
+                <div class="status-indicator" id="statusIndicator">
+                    <span class="status-dot"></span>
+                    <span class="status-text" id="statusText">AI Ready • Sẵn sàng nghe</span>
+                </div>
+                <button class="settings-toggle-btn" id="settingsToggleBtn" title="Cài đặt & Theme">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Center AI Character Stage -->
+        <section class="character-stage">
+            <!-- Floating Speech Bubble Overlay -->
+            <div class="speech-bubble glass-card" id="speechBubble">
+                <div class="bubble-tag" id="bubbleTag">AI Companion</div>
+                <div class="bubble-content" id="bubbleText">Xin chào! Tôi là AI Companion trên hình nền của bạn. Hãy nhấn nút micro hoặc nói chuyện để giao tiếp!</div>
+            </div>
+
+            <!-- Canvas AI Character & Audio Visualizer Ring -->
+            <div class="avatar-canvas-wrapper" id="avatarWrapper">
+                <canvas id="characterCanvas" width="450" height="450"></canvas>
+            </div>
+
+            <!-- Quick Action Chips -->
+            <div class="quick-chips">
+                <button class="chip-btn" data-query="Mấy giờ rồi?">🕒 Mấy giờ rồi?</button>
+                <button class="chip-btn" data-query="Thời tiết hôm nay thế nào?">🌤️ Thời tiết</button>
+                <button class="chip-btn" data-query="Giới thiệu bản thân đi">🤖 Bạn là ai?</button>
+                <button class="chip-btn" data-query="Kể cho tôi một câu chuyện ngắn">✨ Kể chuyện</button>
+                <button class="chip-btn" data-query="Đổi màu hình nền">🎨 Đổi chủ đề</button>
+            </div>
+        </section>
+
+        <!-- Bottom Controls & Chat Input Bar -->
+        <footer class="bottom-bar">
+            <div class="chat-input-wrapper glass-card">
+                <button class="mic-btn" id="micBtn" title="Bật/Tắt Micro lắng nghe">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                        <line x1="12" y1="19" x2="12" y2="23"></line>
+                        <line x1="8" y1="23" x2="16" y2="23"></line>
+                    </svg>
+                </button>
+                <input type="text" id="chatInput" placeholder="Nói hoặc nhập câu hỏi cho AI..." autocomplete="off">
+                <button class="send-btn" id="sendBtn" title="Gửi tin nhắn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </div>
+        </footer>
+
+        <!-- Settings & Customization Drawer Panel -->
+        <div class="settings-drawer glass-card" id="settingsDrawer">
+            <div class="drawer-header">
+                <h3>Cấu hình AI Wallpaper</h3>
+                <button class="close-drawer-btn" id="closeDrawerBtn">&times;</button>
+            </div>
+            <div class="drawer-body">
+                <div class="setting-group">
+                    <label for="apiKeyInput">Gemini API Key (Tùy chọn)</label>
+                    <input type="password" id="apiKeyInput" placeholder="AIzaSy... (Nếu không nhập sẽ dùng Offline AI)">
+                    <small>Nhập API Key từ Google AI Studio để AI trả lời thông minh theo ngữ cảnh.</small>
+                </div>
+
+                <div class="setting-group">
+                    <label>Chủ đề giao diện (Theme)</label>
+                    <div class="theme-options">
+                        <button class="theme-btn active" data-theme="theme-cyan">Cyber Cyan</button>
+                        <button class="theme-btn" data-theme="theme-purple">Deep Purple</button>
+                        <button class="theme-btn" data-theme="theme-emerald">Emerald Aurora</button>
+                        <button class="theme-btn" data-theme="theme-sunset">Neon Sunset</button>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <label for="voiceSelect">Giọng nói AI (TTS Voice)</label>
+                    <select id="voiceSelect"></select>
+                </div>
+
+                <div class="setting-group">
+                    <label for="particleDensity">Mật độ hạt hiệu ứng</label>
+                    <input type="range" id="particleDensity" min="20" max="120" value="60">
+                </div>
+
+                <div class="setting-group">
+                    <button class="save-settings-btn" id="saveSettingsBtn">Lưu Cài Đặt</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Scripts -->
+    <script src="js/ai.js"></script>
+    <script src="js/voice.js"></script>
+    <script src="js/character.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
