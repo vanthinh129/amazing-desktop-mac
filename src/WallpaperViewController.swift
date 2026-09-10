@@ -60,6 +60,92 @@ class WallpaperViewController: NSViewController, WKUIDelegate, WKNavigationDeleg
         }
     }
     
+    // MARK: - WKNavigationDelegate
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        print("[WallpaperViewController] Web View finished loading. Scanning images directory...")
+        scanAndSendGalleryImages()
+    }
+    
+    func scanAndSendGalleryImages() {
+        let fileManager = FileManager.default
+        let currentDir = fileManager.currentDirectoryPath
+        let bundleParentDir = URL(fileURLWithPath: Bundle.main.bundlePath).deletingLastPathComponent().path
+        
+        // 1. Locate source images directory
+        let searchDirectories = [
+            (bundleParentDir as NSString).appendingPathComponent("images"),
+            (currentDir as NSString).appendingPathComponent("images")
+        ]
+        
+        var sourceImagesDir: String? = nil
+        for dir in searchDirectories {
+            if fileManager.fileExists(atPath: dir) {
+                sourceImagesDir = dir
+                break
+            }
+        }
+        
+        // 2. Locate target web/images directory
+        var webImagesDir = (bundleParentDir as NSString).appendingPathComponent("web/images")
+        if let bundleResPath = Bundle.main.resourcePath {
+            let resWebImages = (bundleResPath as NSString).appendingPathComponent("web/images")
+            if fileManager.fileExists(atPath: resWebImages) {
+                webImagesDir = resWebImages
+            }
+        }
+        if !fileManager.fileExists(atPath: webImagesDir) {
+            webImagesDir = (currentDir as NSString).appendingPathComponent("web/images")
+        }
+        
+        try? fileManager.createDirectory(atPath: webImagesDir, withIntermediateDirectories: true, attributes: nil)
+        
+        let validExtensions = Set(["jpg", "jpeg", "png", "webp", "gif", "svg", "bmp"])
+        var relativeImagePaths: [String] = []
+        var processedFileNames = Set<String>()
+        
+        let processDirectory = { (dirPath: String) in
+            if let files = try? fileManager.contentsOfDirectory(atPath: dirPath) {
+                let sortedFiles = files.sorted()
+                for file in sortedFiles {
+                    if file.hasPrefix(".") { continue } // Ignore hidden files
+                    let ext = (file as NSString).pathExtension.lowercased()
+                    let lowerName = file.lowercased()
+                    
+                    if validExtensions.contains(ext) && !processedFileNames.contains(lowerName) {
+                        processedFileNames.insert(lowerName)
+                        
+                        let srcPath = (dirPath as NSString).appendingPathComponent(file)
+                        let destPath = (webImagesDir as NSString).appendingPathComponent(file)
+                        
+                        // Copy file to web/images if not already there
+                        if srcPath != destPath && !fileManager.fileExists(atPath: destPath) {
+                            try? fileManager.copyItem(atPath: srcPath, toPath: destPath)
+                        }
+                        
+                        // Use relative path for WebKit security compliance
+                        let relativePath = "images/" + file
+                        relativeImagePaths.append(relativePath)
+                    }
+                }
+            }
+        }
+        
+        if let srcDir = sourceImagesDir {
+            processDirectory(srcDir)
+        }
+        processDirectory(webImagesDir)
+        
+        print("[WallpaperViewController] Successfully scanned & synced \(relativeImagePaths.count) unique images for WebKit.")
+        
+        if let jsonData = try? JSONSerialization.data(withJSONObject: relativeImagePaths),
+           let jsonString = String(data: jsonData, encoding: .utf8) {
+            let js = "if (window.spatial3DSlider) { window.spatial3DSlider.loadCustomImages(\(jsonString)); }"
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                self.webView.evaluateJavaScript(js, completionHandler: nil)
+            }
+        }
+    }
+    
     // MARK: - WKUIDelegate (Microphone & Camera Permissions)
     @available(macOS 12.0, *)
     func webView(

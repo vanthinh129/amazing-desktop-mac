@@ -61,6 +61,34 @@
             </div>
         </section>
 
+        <!-- Right Side 3D Spatial Gallery Slider Widget -->
+        <aside class="spatial-slider-widget glass-card">
+            <div class="slider-widget-header">
+                <div class="slider-header-title">
+                    <span class="slider-icon">🖼️</span>
+                    <h3>Bộ sưu tập 3D</h3>
+                </div>
+                <span class="active-slide-badge" id="slideBadge">1 / 6</span>
+            </div>
+            
+            <div class="slider-3d-stage" id="slider3DStage">
+                <div class="slider-3d-carousel" id="slider3DCarousel">
+                    <!-- 3D Cards rendered dynamically by js/slider.js -->
+                </div>
+            </div>
+
+            <div class="slider-widget-footer">
+                <div class="slider-controls">
+                    <button class="slider-nav-btn" id="prevSlideBtn" title="Hình trước">&lang;</button>
+                    <div class="slider-progress-track">
+                        <div class="slider-progress-bar" id="sliderProgress"></div>
+                    </div>
+                    <button class="slider-nav-btn" id="nextSlideBtn" title="Hình sau">&rang;</button>
+                </div>
+                <small class="slider-hint">Tự động xoay 5s • Nguồn: <code>images/</code></small>
+            </div>
+        </aside>
+
         <!-- Bottom Controls & Chat Input Bar -->
         <footer class="bottom-bar">
             <div class="chat-input-wrapper glass-card">
@@ -127,6 +155,7 @@
     <script src="js/ai.js"></script>
     <script src="js/voice.js"></script>
     <script src="js/character.js"></script>
+    <script src="js/slider.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>
