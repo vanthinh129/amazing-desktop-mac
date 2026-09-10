@@ -446,13 +446,14 @@ html, body {
     position: fixed;
     right: 2rem;
     top: 50%;
-    transform: translateY(-55%);
+    transform: translateY(-50%);
     width: 360px;
-    height: 480px;
+    height: auto;
     padding: 0;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    align-items: center;
+    gap: 0.8rem;
     z-index: 15;
     background: transparent;
     border: none;
@@ -494,7 +495,7 @@ html, body {
 /* 3D Perspective Stage */
 .slider-3d-stage {
     width: 100%;
-    height: 310px;
+    height: 300px;
     perspective: 800px;
     position: relative;
     display: flex;
@@ -572,12 +573,14 @@ html, body {
     text-overflow: ellipsis;
 }
 
-/* Slider Controls & 5-Second Progress Track */
+/* Slider Controls & Progress Track */
 .slider-widget-footer {
+    width: 220px;
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
+    gap: 0.5rem;
     align-items: center;
+    margin-top: 2.4rem; /* Safely clears the bottom edge of the scaled 3D card */
 }
 
 .slider-controls {
