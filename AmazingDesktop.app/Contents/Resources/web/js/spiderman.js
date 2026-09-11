@@ -1,7 +1,7 @@
 /**
- * Amazing Desktop Mac - ULTRA EPIC SPIDER-VERSE CINEMATIC WALLPAPER 🕷️🏙️💥
- * Features: Dynamic Camera Trajectory & Zoom Engine, Spider-Verse Chromatic Glitch,
- * Comic Pop-Art Text ("THWIP!", "BOOM!"), Anamorphic Lens Flares, Braided Web Cables & Screen Shake
+ * Amazing Desktop Mac - ULTRA CINEMATIC PROCEDURAL SPIDER-MAN WALLPAPER 🕷️🏙️💥
+ * 100% Procedural Vector 3D Architectural NYC Skyline (3D Buildings, Fire Escapes, Heli-pads, Oscorp, Bugle, Chrysler Spire)
+ * High-Detail Superhero Anatomical Model, Braided Web Cables, Camera Motion & Spider-Verse FX
  */
 
 class SpiderCharacter {
@@ -10,7 +10,7 @@ class SpiderCharacter {
         if (!this.canvas) return;
 
         this.ctx = this.canvas.getContext('2d');
-        
+
         // Fullscreen setup
         this.resize = this.resize.bind(this);
         this.resize();
@@ -26,14 +26,14 @@ class SpiderCharacter {
         this.webLines = [];
         this.sparks = [];
         this.dustParticles = [];
-        this.comicTexts = []; // Comic Pop-Art Texts ("THWIP!", "BOOM!")
+        this.comicTexts = [];
 
-        // Stars & NYC Buildings Setup
+        // Stars & 3D NYC Buildings Setup
         this.initStars();
         this.initDustParticles();
         this.initBuildings();
 
-        // DYNAMIC CINEMATIC CAMERA SYSTEM
+        // CINEMATIC CAMERA SYSTEM
         this.cam = {
             x: 0,
             y: 0,
@@ -48,7 +48,7 @@ class SpiderCharacter {
         // Sequences: 'DIVE_SWING' -> 'CAMERA_CLOSEUP_FLIP' -> 'EPIC_HERO_LAND' -> 'ROOFTOP_PERCH' -> 'MOON_LAUNCH' -> loop
         this.actionState = 'DIVE_SWING';
         this.actionTime = 0;
-        this.spideyPos = { x: -100, y: -100, rot: 0, scale: 1.3, pose: 'SWING' };
+        this.spideyPos = { x: -100, y: -100, rot: 0, scale: 1.35, pose: 'SWING' };
         this.landingImpact = 0;
 
         this.animate = this.animate.bind(this);
@@ -73,7 +73,7 @@ class SpiderCharacter {
 
     initStars() {
         this.stars = [];
-        const starCount = Math.max(100, Math.floor((this.width * this.height) / 7000));
+        const starCount = Math.max(120, Math.floor((this.width * this.height) / 6000));
         for (let i = 0; i < starCount; i++) {
             this.stars.push({
                 x: Math.random() * this.width,
@@ -101,35 +101,40 @@ class SpiderCharacter {
 
     initBuildings() {
         this.buildings = [];
-        const numBuildings = Math.max(10, Math.ceil(this.width / 130));
+        const numBuildings = Math.max(9, Math.ceil(this.width / 140));
         const bWidth = this.width / numBuildings;
         const centerIdx = Math.floor(numBuildings / 2);
 
         for (let i = 0; i < numBuildings; i++) {
             const isCenter = (i === centerIdx || i === centerIdx - 1);
             let bType = 'GENERIC';
-            let bHeight = 200 + Math.random() * 180;
+            let bHeight = 220 + Math.random() * 180;
             let bName = '';
-            let bColor = (i % 2 === 0) ? '#080d1e' : '#0d152d';
+            let bColor = (i % 2 === 0) ? '#091024' : '#0e1834';
+            let depth3D = 18 + Math.random() * 12;
 
             if (i === 1) {
                 bType = 'OSCORP';
-                bHeight = 350;
+                bHeight = 360;
                 bName = 'OSCORP';
-                bColor = '#0a142c';
+                bColor = '#0b1630';
             } else if (i === numBuildings - 2) {
                 bType = 'BUGLE';
-                bHeight = 310;
+                bHeight = 320;
                 bName = 'DAILY BUGLE';
-                bColor = '#170f24';
+                bColor = '#161024';
+            } else if (i === 3) {
+                bType = 'CHRYSLER';
+                bHeight = 380;
+                bColor = '#0a1428';
             } else if (isCenter) {
                 bType = 'STAGE';
                 bHeight = 240;
-                bColor = '#050812';
+                bColor = '#060a16';
             }
 
-            const windowCols = Math.max(3, Math.floor(bWidth / 18));
-            const windowRows = Math.floor(bHeight / 24);
+            const windowCols = Math.max(3, Math.floor(bWidth / 20));
+            const windowRows = Math.floor(bHeight / 26);
             const windows = [];
 
             for (let r = 0; r < windowRows; r++) {
@@ -146,13 +151,16 @@ class SpiderCharacter {
                 x: i * bWidth,
                 width: bWidth + 3,
                 height: bHeight,
+                depth3D: depth3D,
                 type: bType,
                 name: bName,
                 windowCols: windowCols,
                 windowRows: windowRows,
                 windows: windows,
                 color: bColor,
-                spire: (i % 3 === 2)
+                spire: (i % 3 === 2),
+                waterTower: (i % 4 === 1),
+                helipad: (i === 2)
             });
         }
     }
@@ -238,8 +246,8 @@ class SpiderCharacter {
         this.ctx.save();
         this.applyCameraTransform();
 
-        // 1. Render Cinematic Layered NYC Skyline Background
-        this.drawCinematicNYCBackground();
+        // 1. Render 3D Architectural Procedural NYC Skyline Background
+        this.drawProceduralArchitecturalSkyline();
 
         // 2. Render Atmospheric Dust Particles
         this.updateAndDrawDust();
@@ -250,7 +258,7 @@ class SpiderCharacter {
         // 4. Update High-Impact Movie Action State Machine
         this.updateMovieActionRoutine();
 
-        // 5. Render High-Detail Spider-Man Model with Chromatic Glitch Shift
+        // 5. Render High-Detail Superhero Anatomical Spider-Man Model
         this.drawHighDetailSpiderMan(this.spideyPos.x, this.spideyPos.y, this.spideyPos.rot, this.spideyPos.scale, this.spideyPos.pose);
 
         // 6. Render Ground Impact Shockwave
@@ -268,11 +276,9 @@ class SpiderCharacter {
     }
 
     updateCamera() {
-        // Smoothly interpolate camera zoom & tilt towards targets
         this.cam.zoom += (this.cam.targetZoom - this.cam.zoom) * 0.08;
         this.cam.angle += (this.cam.targetAngle - this.cam.angle) * 0.08;
 
-        // Apply decay to screen shake
         if (this.cam.shake > 0) {
             this.cam.shake *= 0.88;
             if (this.cam.shake < 0.2) this.cam.shake = 0;
@@ -281,7 +287,6 @@ class SpiderCharacter {
 
     applyCameraTransform() {
         const ctx = this.ctx;
-        // Screen shake offset
         const shakeX = (Math.random() - 0.5) * this.cam.shake;
         const shakeY = (Math.random() - 0.5) * this.cam.shake;
 
@@ -294,9 +299,7 @@ class SpiderCharacter {
     updateMovieActionRoutine() {
         this.actionTime += 0.03;
 
-        // ----------------------------------------------------
         // SEQUENCE 1: DIVE_SWING (Wide View Pendulum Swing)
-        // ----------------------------------------------------
         if (this.actionState === 'DIVE_SWING') {
             const duration = 1.3;
             const p = Math.min(1, this.actionTime / duration);
@@ -312,7 +315,7 @@ class SpiderCharacter {
             this.spideyPos.x = pivotX + Math.sin(angle) * radius;
             this.spideyPos.y = pivotY + Math.cos(angle) * radius;
             this.spideyPos.rot = angle + Math.PI / 2;
-            this.spideyPos.scale = 1.3;
+            this.spideyPos.scale = 1.35;
             this.spideyPos.pose = 'SWING';
 
             this.drawBraidedWebCable(pivotX, pivotY, this.spideyPos.x, this.spideyPos.y);
@@ -322,14 +325,11 @@ class SpiderCharacter {
                 this.actionTime = 0;
             }
         }
-        // ----------------------------------------------------
-        // SEQUENCE 2: CAMERA_CLOSEUP_FLIP (Zoom In 1.5x, 360° Flip & Comic "THWIP!")
-        // ----------------------------------------------------
+        // SEQUENCE 2: CAMERA_CLOSEUP_FLIP (Zoom In 1.45x, 360° Flip & Comic "THWIP!")
         else if (this.actionState === 'CAMERA_CLOSEUP_FLIP') {
             const duration = 1.2;
             const p = Math.min(1, this.actionTime / duration);
 
-            // DYNAMIC CAMERA CLOSE-UP ZOOM!
             this.cam.targetZoom = 1.45;
             this.cam.targetAngle = 0.08;
 
@@ -339,8 +339,8 @@ class SpiderCharacter {
 
             this.spideyPos.x = startX + p * (targetX - startX);
             this.spideyPos.y = (this.height - 240) + jumpY;
-            this.spideyPos.rot = p * Math.PI * 4; // Double 720° somersault!
-            this.spideyPos.scale = 1.4;
+            this.spideyPos.rot = p * Math.PI * 4;
+            this.spideyPos.scale = 1.45;
             this.spideyPos.pose = 'FLIP';
 
             if (Math.abs(this.actionTime - 0.3) < 0.03) {
@@ -363,13 +363,11 @@ class SpiderCharacter {
                 this.actionState = 'EPIC_HERO_LAND';
                 this.actionTime = 0;
                 this.landingImpact = 1.0;
-                this.cam.shake = 18; // Trigger SCREEN SHAKE!
+                this.cam.shake = 18;
                 this.spawnComicText('BOOM!', this.centerX, this.height - 280, '#ff003c');
             }
         }
-        // ----------------------------------------------------
         // SEQUENCE 3: EPIC_HERO_LAND (3-Point Landing Crouch with Screen Shake & Pop-Art "BOOM!")
-        // ----------------------------------------------------
         else if (this.actionState === 'EPIC_HERO_LAND') {
             const duration = 1.0;
             const p = Math.min(1, this.actionTime / duration);
@@ -381,7 +379,7 @@ class SpiderCharacter {
             this.spideyPos.x = this.centerX;
             this.spideyPos.y = targetY + (1 - p) * 25;
             this.spideyPos.rot = 0;
-            this.spideyPos.scale = 1.35;
+            this.spideyPos.scale = 1.4;
             this.spideyPos.pose = 'CROUCH_LAND';
 
             if (p >= 1.0) {
@@ -389,9 +387,7 @@ class SpiderCharacter {
                 this.actionTime = 0;
             }
         }
-        // ----------------------------------------------------
         // SEQUENCE 4: ROOFTOP_PERCH (Rooftop Stand & Rapid Dual Web Shooting)
-        // ----------------------------------------------------
         else if (this.actionState === 'ROOFTOP_PERCH') {
             const duration = 2.2;
             const p = Math.min(1, this.actionTime / duration);
@@ -403,7 +399,7 @@ class SpiderCharacter {
             this.spideyPos.x = this.centerX;
             this.spideyPos.y = (this.height - 230) + floatBob;
             this.spideyPos.rot = Math.sin(this.actionTime * 1.5) * 0.03;
-            this.spideyPos.scale = 1.3;
+            this.spideyPos.scale = 1.35;
             this.spideyPos.pose = 'STAND_HERO';
 
             if (Math.abs(this.actionTime - 0.4) < 0.03) {
@@ -420,9 +416,7 @@ class SpiderCharacter {
                 this.actionTime = 0;
             }
         }
-        // ----------------------------------------------------
         // SEQUENCE 5: MOON_LAUNCH (High Altitude Launch across Moon)
-        // ----------------------------------------------------
         else if (this.actionState === 'MOON_LAUNCH') {
             const duration = 1.5;
             const p = Math.min(1, this.actionTime / duration);
@@ -438,7 +432,7 @@ class SpiderCharacter {
             this.spideyPos.x = pivotX + Math.sin(angle) * radius;
             this.spideyPos.y = pivotY + Math.cos(angle) * radius;
             this.spideyPos.rot = angle - Math.PI / 2;
-            this.spideyPos.scale = 1.3;
+            this.spideyPos.scale = 1.35;
             this.spideyPos.pose = 'SWING';
 
             this.drawBraidedWebCable(pivotX, pivotY, this.spideyPos.x, this.spideyPos.y);
@@ -454,7 +448,6 @@ class SpiderCharacter {
         const ctx = this.ctx;
         ctx.save();
 
-        // Main white web strand
         ctx.beginPath();
         ctx.moveTo(pivotX, pivotY);
         ctx.lineTo(spideyX, spideyY);
@@ -464,7 +457,6 @@ class SpiderCharacter {
         ctx.shadowColor = '#00f0ff';
         ctx.stroke();
 
-        // Secondary cyan spiral web accent
         ctx.beginPath();
         ctx.moveTo(pivotX, pivotY);
         const midX = (pivotX + spideyX) / 2 + Math.sin(this.time * 6) * 10;
@@ -474,7 +466,6 @@ class SpiderCharacter {
         ctx.lineWidth = 2.5;
         ctx.stroke();
 
-        // Anchor node spark
         ctx.beginPath();
         ctx.arc(pivotX, pivotY, 6, 0, Math.PI * 2);
         ctx.fillStyle = '#ffffff';
@@ -493,7 +484,6 @@ class SpiderCharacter {
         ctx.translate(this.centerX, targetY);
         ctx.scale(1, 0.32);
 
-        // Outer cyan ring
         ctx.beginPath();
         ctx.arc(0, 0, radius, 0, Math.PI * 2);
         ctx.strokeStyle = `rgba(0, 240, 255, ${this.landingImpact})`;
@@ -502,14 +492,12 @@ class SpiderCharacter {
         ctx.shadowColor = '#00f0ff';
         ctx.stroke();
 
-        // Inner crimson ring
         ctx.beginPath();
         ctx.arc(0, 0, radius * 0.65, 0, Math.PI * 2);
         ctx.strokeStyle = `rgba(255, 0, 60, ${this.landingImpact})`;
         ctx.lineWidth = 5 * this.landingImpact;
         ctx.stroke();
 
-        // Radial web shockwave spokes
         for (let a = 0; a < Math.PI * 2; a += Math.PI / 8) {
             ctx.beginPath();
             ctx.moveTo(0, 0);
@@ -535,7 +523,6 @@ class SpiderCharacter {
             ctx.rotate(t.rotation);
             ctx.scale(t.scale, t.scale);
 
-            // Comic Pop-Art Badge Background Starburst
             ctx.beginPath();
             const points = 10;
             for (let p = 0; p < points * 2; p++) {
@@ -553,7 +540,6 @@ class SpiderCharacter {
             ctx.shadowColor = t.color;
             ctx.fill();
 
-            // Text Label
             ctx.fillStyle = '#ffffff';
             ctx.font = '900 24px "Space Grotesk", sans-serif';
             ctx.textAlign = 'center';
@@ -571,15 +557,15 @@ class SpiderCharacter {
         }
     }
 
-    drawCinematicNYCBackground() {
+    drawProceduralArchitecturalSkyline() {
         const ctx = this.ctx;
 
-        // Rich Movie Atmospheric Night Sky Gradient (Deep Indigo to Cyber Night)
+        // Rich Deep Midnight Sky Gradient
         const skyGrad = ctx.createLinearGradient(0, 0, 0, this.height);
-        skyGrad.addColorStop(0, '#040714');
-        skyGrad.addColorStop(0.4, '#0a122c');
-        skyGrad.addColorStop(0.8, '#141d3d');
-        skyGrad.addColorStop(1, '#1d274a');
+        skyGrad.addColorStop(0, '#030510');
+        skyGrad.addColorStop(0.4, '#091128');
+        skyGrad.addColorStop(0.8, '#121b38');
+        skyGrad.addColorStop(1, '#1b2546');
         ctx.fillStyle = skyGrad;
         ctx.fillRect(0, 0, this.width, this.height);
 
@@ -637,7 +623,7 @@ class SpiderCharacter {
         ctx.fill();
         ctx.restore();
 
-        // Searchlight Spotlight Beams with Light Shaft Volumetrics
+        // Searchlight Spotlight Beams with Volumetrics
         ctx.save();
         const beamAngle = Math.sin(this.time * 0.6) * 0.32;
         ctx.translate(this.width * 0.2, this.height);
@@ -656,55 +642,168 @@ class SpiderCharacter {
         ctx.fill();
         ctx.restore();
 
-        // Render Layered NYC Skyscrapers (Oscorp, Daily Bugle, Stage)
+        // Render 3D Architectural Procedural Skyscrapers (Front Face + Isometric 3D Side Face)
         this.buildings.forEach(b => {
             const bY = this.height - b.height;
             ctx.save();
 
+            // 1. 3D Side Shadow Facade (Isometric depth)
+            ctx.fillStyle = '#030610';
+            ctx.beginPath();
+            ctx.moveTo(b.x + b.width, bY);
+            ctx.lineTo(b.x + b.width + b.depth3D, bY - b.depth3D * 0.5);
+            ctx.lineTo(b.x + b.width + b.depth3D, this.height);
+            ctx.lineTo(b.x + b.width, this.height);
+            ctx.closePath();
+            ctx.fill();
+
+            // 3D Roof Top Surface
+            ctx.fillStyle = '#0f1730';
+            ctx.beginPath();
+            ctx.moveTo(b.x, bY);
+            ctx.lineTo(b.x + b.depth3D * 0.6, bY - b.depth3D * 0.5);
+            ctx.lineTo(b.x + b.width + b.depth3D, bY - b.depth3D * 0.5);
+            ctx.lineTo(b.x + b.width, bY);
+            ctx.closePath();
+            ctx.fill();
+
+            // 2. Main Front Facade with Metallic Vertical Gradients
             const bGrad = ctx.createLinearGradient(b.x, bY, b.x + b.width, bY + b.height);
             bGrad.addColorStop(0, b.color);
-            bGrad.addColorStop(1, '#050914');
+            bGrad.addColorStop(1, '#040714');
 
             ctx.fillStyle = bGrad;
             ctx.fillRect(b.x, bY, b.width, b.height);
 
-            ctx.strokeStyle = 'rgba(0, 240, 255, 0.18)';
+            ctx.strokeStyle = 'rgba(0, 240, 255, 0.2)';
             ctx.lineWidth = 1.5;
             ctx.strokeRect(b.x, bY, b.width, b.height);
 
-            // OSCORP TOWER (Slanted Glass Top & Neon Sign)
-            if (b.type === 'OSCORP') {
-                ctx.beginPath();
-                ctx.moveTo(b.x, bY + 40);
-                ctx.lineTo(b.x + b.width, bY);
-                ctx.lineTo(b.x + b.width, bY + 40);
-                ctx.fillStyle = 'rgba(0, 240, 255, 0.25)';
-                ctx.fill();
+            // SPECIAL LANDMARKS:
 
-                ctx.fillStyle = '#00f0ff';
-                ctx.font = 'bold 18px "Space Grotesk", sans-serif';
+            // A. CHRYSLER STYLE ART-DECO SPIRE
+            if (b.type === 'CHRYSLER') {
+                ctx.save();
+                ctx.translate(b.x + b.width / 2, bY);
+
+                // Tiered Arches
+                for (let tier = 0; tier < 4; tier++) {
+                    const tW = b.width * (0.8 - tier * 0.18);
+                    const tH = 18;
+                    const tY = -tier * 18;
+
+                    ctx.fillStyle = '#0a1632';
+                    ctx.fillRect(-tW / 2, tY - tH, tW, tH);
+                    ctx.strokeStyle = '#00f0ff';
+                    ctx.strokeRect(-tW / 2, tY - tH, tW, tH);
+                }
+
+                // Needle Spire
+                ctx.beginPath();
+                ctx.moveTo(-4, -72);
+                ctx.lineTo(0, -130);
+                ctx.lineTo(4, -72);
+                ctx.fillStyle = '#e0f7fc';
                 ctx.shadowBlur = 20;
                 ctx.shadowColor = '#00f0ff';
-                ctx.fillText('OSCORP', b.x + 10, bY + 70);
+                ctx.fill();
+                ctx.restore();
             }
 
-            // DAILY BUGLE TOWER (Classic Brick & Giant Red Billboard)
+            // B. OSCORP TOWER (Slanted Glass Crown & Vertical LED Stripes & Cyan Neon Logo)
+            if (b.type === 'OSCORP') {
+                // Glass Slanted Roof Crown
+                ctx.beginPath();
+                ctx.moveTo(b.x, bY + 45);
+                ctx.lineTo(b.x + b.width, bY);
+                ctx.lineTo(b.x + b.width, bY + 45);
+                ctx.fillStyle = 'rgba(0, 240, 255, 0.35)';
+                ctx.fill();
+
+                // Vertical Cyan LED Lines running down the facade
+                ctx.strokeStyle = 'rgba(0, 240, 255, 0.6)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(b.x + 10, bY + 45);
+                ctx.lineTo(b.x + 10, bY + b.height);
+                ctx.moveTo(b.x + b.width - 10, bY + 10);
+                ctx.lineTo(b.x + b.width - 10, bY + b.height);
+                ctx.stroke();
+
+                // OSCORP Glowing Neon Logo Badge
+                ctx.fillStyle = '#00f0ff';
+                ctx.font = '900 18px "Space Grotesk", sans-serif';
+                ctx.shadowBlur = 22;
+                ctx.shadowColor = '#00f0ff';
+                ctx.fillText('OSCORP', b.x + 12, bY + 75);
+            }
+
+            // C. DAILY BUGLE TOWER (Steel Billboard with Red Neon Sign & Fire Escapes)
             if (b.type === 'BUGLE') {
                 const bbX = b.x + 6;
                 const bbY = bY + 20;
                 const bbW = b.width - 12;
-                const bbH = 45;
+                const bbH = 46;
 
+                // Steel Scaffold legs holding billboard
+                ctx.strokeStyle = '#555566';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(bbX + 10, bbY + bbH);
+                ctx.lineTo(bbX + 10, bbY + bbH + 15);
+                ctx.moveTo(bbX + bbW - 10, bbY + bbH);
+                ctx.lineTo(bbX + bbW - 10, bbY + bbH + 15);
+                ctx.stroke();
+
+                // Red Neon Billboard Box
                 ctx.fillStyle = '#ff003c';
-                ctx.shadowBlur = 22;
+                ctx.shadowBlur = 25;
                 ctx.shadowColor = '#ff003c';
                 ctx.fillRect(bbX, bbY, bbW, bbH);
 
                 ctx.fillStyle = '#ffffff';
-                ctx.font = '900 13px "Space Grotesk", sans-serif';
+                ctx.font = '900 14px "Space Grotesk", sans-serif';
                 ctx.shadowBlur = 12;
                 ctx.shadowColor = '#ffffff';
                 ctx.fillText('DAILY BUGLE', bbX + 4, bbY + 28);
+
+                // Side Fire Escape Stairs
+                ctx.strokeStyle = '#444455';
+                ctx.lineWidth = 2;
+                for (let feY = bY + 80; feY < bY + b.height - 40; feY += 35) {
+                    ctx.beginPath();
+                    ctx.moveTo(b.x + b.width - 18, feY);
+                    ctx.lineTo(b.x + b.width, feY + 12);
+                    ctx.stroke();
+                }
+            }
+
+            // D. WATER TOWERS ON ROOFS
+            if (b.waterTower && b.type === 'GENERIC') {
+                const wtX = b.x + b.width * 0.3;
+                const wtY = bY - 28;
+
+                // Wooden Cylinder Tank
+                ctx.fillStyle = '#4a3525';
+                ctx.fillRect(wtX, wtY, 22, 22);
+
+                // Conical Roof Cap
+                ctx.beginPath();
+                ctx.moveTo(wtX - 2, wtY);
+                ctx.lineTo(wtX + 11, wtY - 10);
+                ctx.lineTo(wtX + 24, wtY);
+                ctx.fillStyle = '#2d1e15';
+                ctx.fill();
+
+                // Metal Stilts
+                ctx.strokeStyle = '#333333';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(wtX + 3, wtY + 22);
+                ctx.lineTo(wtX + 3, bY);
+                ctx.moveTo(wtX + 19, wtY + 22);
+                ctx.lineTo(wtX + 19, bY);
+                ctx.stroke();
             }
 
             // Building Spire Hazard Lights
@@ -726,7 +825,7 @@ class SpiderCharacter {
                 }
             }
 
-            // Window Lights
+            // Architectural Window Light Grid
             const colWidth = (b.width - 14) / b.windowCols;
             const rowHeight = (b.height - 30) / b.windowRows;
 
@@ -744,7 +843,7 @@ class SpiderCharacter {
                     ctx.shadowColor = w.color;
                     ctx.fillRect(wx, wy, colWidth - 4, rowHeight - 4);
                 } else {
-                    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.72)';
                     ctx.globalAlpha = 1.0;
                     ctx.fillRect(wx, wy, colWidth - 4, rowHeight - 4);
                 }
@@ -823,7 +922,7 @@ class SpiderCharacter {
             ctx.moveTo(w.startX, w.startY);
             ctx.lineTo(currX, currY);
             ctx.strokeStyle = `rgba(255, 255, 255, ${w.life})`;
-            ctx.lineWidth = 3.8;
+            ctx.lineWidth = 4;
             ctx.shadowBlur = 18;
             ctx.shadowColor = '#00f0ff';
             ctx.stroke();
@@ -872,12 +971,12 @@ class SpiderCharacter {
         // SPIDER-VERSE CHROMATIC ABERRATION GLITCH SHIFT EFFECT
         if (pose === 'FLIP' || pose === 'SWING') {
             ctx.save();
-            ctx.translate(-4, -2);
+            ctx.translate(-5, -3);
             this.drawSpiderManBodyGeometry(ctx, 'rgba(0, 240, 255, 0.45)', pose);
             ctx.restore();
 
             ctx.save();
-            ctx.translate(4, 2);
+            ctx.translate(5, 3);
             this.drawSpiderManBodyGeometry(ctx, 'rgba(255, 0, 60, 0.45)', pose);
             ctx.restore();
         }
@@ -893,20 +992,30 @@ class SpiderCharacter {
         const suitBlue = overrideColor || '#0a1d4a';
         const webLineColor = 'rgba(15, 20, 35, 0.85)';
 
-        ctx.shadowBlur = 20;
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.75)';
+        ctx.shadowBlur = 22;
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
 
         if (pose === 'CROUCH_LAND') {
             ctx.scale(1.1, 0.85);
         }
 
-        // Torso / Legs
+        // 1. Muscular Torso & Legs
+        const bodyGrad = ctx.createLinearGradient(-34, 0, 34, 85);
+        bodyGrad.addColorStop(0, '#102766');
+        bodyGrad.addColorStop(0.5, suitBlue);
+        bodyGrad.addColorStop(1, '#050c24');
+
         ctx.beginPath();
-        ctx.ellipse(0, 42, 34, 42, 0, 0, Math.PI * 2);
-        ctx.fillStyle = suitBlue;
+        ctx.ellipse(0, 42, 34, 44, 0, 0, Math.PI * 2);
+        ctx.fillStyle = bodyGrad;
         ctx.fill();
 
-        // Red V-Chest Vest
+        // 2. Metallic Red V-Chest Vest with 3D Specular Shading
+        const chestGrad = ctx.createLinearGradient(-30, 0, 30, 78);
+        chestGrad.addColorStop(0, '#ff1a53');
+        chestGrad.addColorStop(0.4, suitRed);
+        chestGrad.addColorStop(1, '#990024');
+
         ctx.beginPath();
         ctx.moveTo(-30, 12);
         ctx.lineTo(0, 78);
@@ -914,19 +1023,29 @@ class SpiderCharacter {
         ctx.lineTo(24, 8);
         ctx.lineTo(0, 52);
         ctx.lineTo(-24, 8);
-        ctx.fillStyle = suitRed;
+        ctx.fillStyle = chestGrad;
         ctx.fill();
 
-        // Spider Emblem
+        // 3. Sharp 8-Legged Spider Emblem with Gold Contour Outline
         ctx.save();
         ctx.translate(0, 34);
+
+        // Gold backlight contour
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 7.5, 10.5, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffea75';
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = '#ffea75';
+        ctx.fill();
+
+        // Spider Body
         ctx.beginPath();
         ctx.ellipse(0, 0, 6, 9, 0, 0, Math.PI * 2);
         ctx.fillStyle = '#060810';
         ctx.fill();
 
         ctx.strokeStyle = '#060810';
-        ctx.lineWidth = 2.2;
+        ctx.lineWidth = 2.4;
         for (let i = -1; i <= 1; i += 2) {
             ctx.beginPath();
             ctx.moveTo(0, -4);
@@ -942,18 +1061,22 @@ class SpiderCharacter {
         }
         ctx.restore();
 
-        // Arms
+        // 4. Muscular Limbs (Biceps & Forearms with Web Shooter Gauntlets)
         const isSpeakingOrThwipping = this.state === 'SPEAKING' || this.webLines.length > 0;
         const armWave = isSpeakingOrThwipping ? Math.sin(this.time * 12) * 10 : Math.sin(this.time * 2) * 3;
 
-        // Left Arm
+        // Left Arm (Defined Bicep & Forearm)
         ctx.save();
         ctx.translate(-30, 18);
         ctx.rotate(-0.35 + armWave * 0.02);
         ctx.beginPath();
         ctx.ellipse(0, 22, 11, 24, 0.2, 0, Math.PI * 2);
-        ctx.fillStyle = suitRed;
+        ctx.fillStyle = chestGrad;
         ctx.fill();
+
+        // Web Shooter Gauntlet
+        ctx.fillStyle = '#08173d';
+        ctx.fillRect(-8, 28, 16, 8);
 
         ctx.beginPath();
         ctx.arc(0, 42, 10, 0, Math.PI * 2);
@@ -961,21 +1084,26 @@ class SpiderCharacter {
         ctx.fill();
         ctx.restore();
 
-        // Right Arm (Thwip Gesture)
+        // Right Arm (Signature Thwip Web Shooting Pose)
         ctx.save();
         ctx.translate(30, 18);
         const rArmAngle = isSpeakingOrThwipping ? -0.85 : (this.state === 'LISTENING' ? -0.4 : 0.25);
         ctx.rotate(rArmAngle);
         ctx.beginPath();
         ctx.ellipse(0, 22, 11, 24, -0.2, 0, Math.PI * 2);
-        ctx.fillStyle = suitRed;
+        ctx.fillStyle = chestGrad;
         ctx.fill();
+
+        // Web Shooter Gauntlet
+        ctx.fillStyle = '#08173d';
+        ctx.fillRect(-8, 28, 16, 8);
 
         ctx.beginPath();
         ctx.arc(0, 42, 10, 0, Math.PI * 2);
         ctx.fillStyle = suitRed;
         ctx.fill();
 
+        // Extended Thwip Fingers
         ctx.strokeStyle = '#a00028';
         ctx.lineWidth = 2.4;
         ctx.beginPath();
@@ -988,18 +1116,18 @@ class SpiderCharacter {
         ctx.stroke();
         ctx.restore();
 
-        // Head Mask
+        // 5. Head Mask with 3D Metallic Gradient
         ctx.save();
         ctx.translate(0, -18);
 
         ctx.beginPath();
         ctx.ellipse(0, 0, 48, 50, 0, 0, Math.PI * 2);
-        ctx.fillStyle = suitRed;
+        ctx.fillStyle = chestGrad;
         ctx.shadowBlur = 25;
         ctx.shadowColor = '#ff003c';
         ctx.fill();
 
-        // Web Mesh on Mask
+        // Fine Spiderweb Grid Mesh
         ctx.save();
         ctx.clip();
         ctx.strokeStyle = webLineColor;
@@ -1018,7 +1146,7 @@ class SpiderCharacter {
         }
         ctx.restore();
 
-        // Eye Lenses
+        // 6. High-Glint White Glass Eye Lenses
         this.drawSpideyLenses(ctx);
 
         ctx.restore(); // Head
@@ -1055,6 +1183,7 @@ class SpiderCharacter {
             ctx.translate(side * lensOffsetX, lensOffsetY);
             ctx.scale(side * lensScale, lensScale * squint);
 
+            // Outer Metallic Frame
             ctx.beginPath();
             ctx.moveTo(0, -20);
             ctx.bezierCurveTo(15, -20, 24, -4, 22, 15);
@@ -1065,6 +1194,7 @@ class SpiderCharacter {
             ctx.shadowColor = glowColor;
             ctx.fill();
 
+            // Inner Glowing White Glass Lens
             ctx.beginPath();
             ctx.moveTo(0, -15);
             ctx.bezierCurveTo(11, -15, 18, -3, 16, 11);
@@ -1081,11 +1211,12 @@ class SpiderCharacter {
             ctx.shadowColor = glowColor;
             ctx.fill();
 
+            // Glass Lens Specular Glint Line
             ctx.beginPath();
             ctx.moveTo(-6, -9);
             ctx.lineTo(9, 2);
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-            ctx.lineWidth = 2.2;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+            ctx.lineWidth = 2.4;
             ctx.stroke();
 
             ctx.restore();
