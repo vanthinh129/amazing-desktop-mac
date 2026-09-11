@@ -112,6 +112,9 @@ class AppController {
             window.aiCharacter.stop();
         }
 
+        const avatarWrapper = document.getElementById('avatarWrapper');
+        const canvas = document.getElementById('characterCanvas');
+
         document.querySelectorAll('.character-btn').forEach(b => {
             if (b.getAttribute('data-character') === type) {
                 b.classList.add('active');
@@ -121,11 +124,19 @@ class AppController {
         });
 
         if (type === 'spiderman' && window.SpiderCharacter) {
+            if (avatarWrapper) avatarWrapper.classList.add('fullscreen-mode');
             window.aiCharacter = new SpiderCharacter('characterCanvas');
-        } else if (type === 'minion' && window.MinionCharacter) {
-            window.aiCharacter = new MinionCharacter('characterCanvas');
-        } else if (window.AICharacter) {
-            window.aiCharacter = new AICharacter('characterCanvas');
+        } else {
+            if (avatarWrapper) avatarWrapper.classList.remove('fullscreen-mode');
+            if (canvas) {
+                canvas.width = 450;
+                canvas.height = 450;
+            }
+            if (type === 'minion' && window.MinionCharacter) {
+                window.aiCharacter = new MinionCharacter('characterCanvas');
+            } else if (window.AICharacter) {
+                window.aiCharacter = new AICharacter('characterCanvas');
+            }
         }
 
         localStorage.setItem('active_character', type);

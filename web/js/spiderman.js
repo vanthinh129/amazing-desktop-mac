@@ -1,6 +1,7 @@
 /**
- * Amazing Desktop Mac - Spider-Man AI Companion Character Renderer 🕷️🏙️
- * Interactive NYC Night Skyline Canvas Renderer with Cinematic Web-Slinging & Acrobatics Intro
+ * Amazing Desktop Mac - ULTRA EPIC SPIDER-VERSE CINEMATIC WALLPAPER 🕷️🏙️💥
+ * Features: Dynamic Camera Trajectory & Zoom Engine, Spider-Verse Chromatic Glitch,
+ * Comic Pop-Art Text ("THWIP!", "BOOM!"), Anamorphic Lens Flares, Braided Web Cables & Screen Shake
  */
 
 class SpiderCharacter {
@@ -9,102 +10,163 @@ class SpiderCharacter {
         if (!this.canvas) return;
 
         this.ctx = this.canvas.getContext('2d');
-        this.width = this.canvas.width = 450;
-        this.height = this.canvas.height = 450;
-        this.centerX = this.width / 2;
-        this.centerY = this.height / 2;
+        
+        // Fullscreen setup
+        this.resize = this.resize.bind(this);
+        this.resize();
+        window.addEventListener('resize', this.resize);
 
-        // Character State: 'IDLE' | 'LISTENING' | 'THINKING' | 'SPEAKING'
+        // AI State: 'IDLE' | 'LISTENING' | 'THINKING' | 'SPEAKING'
         this.state = 'IDLE';
 
         this.time = 0;
         this.audioAmplitude = 0;
-        this.blinkTimer = 0;
-        this.isBlinking = false;
 
-        // Mouse look-at tracking
-        this.mousePos = { x: this.centerX, y: this.centerY };
-        this.headAngle = 0;
-
-        // Interactive Web Thwip Bullets/Lines
+        // Dynamic Elements
         this.webLines = [];
         this.sparks = [];
+        this.dustParticles = [];
+        this.comicTexts = []; // Comic Pop-Art Texts ("THWIP!", "BOOM!")
 
-        // Stars array in NYC Night Sky
-        this.stars = [];
-        for (let i = 0; i < 40; i++) {
-            this.stars.push({
-                x: Math.random() * this.width,
-                y: Math.random() * (this.height * 0.6),
-                radius: Math.random() * 1.8 + 0.5,
-                alpha: Math.random() * 0.8 + 0.2,
-                twinkleSpeed: Math.random() * 0.04 + 0.01
-            });
-        }
+        // Stars & NYC Buildings Setup
+        this.initStars();
+        this.initDustParticles();
+        this.initBuildings();
 
-        // NYC Buildings Generator
-        this.buildings = [
-            { x: 10, width: 65, height: 210, windowCols: 3, windowRows: 7, color: '#0d1326' },
-            { x: 80, width: 85, height: 280, windowCols: 4, windowRows: 9, color: '#111833', spire: true },
-            { x: 170, width: 110, height: 230, windowCols: 5, windowRows: 8, color: '#090e1c' }, // Ledge building for Spidey
-            { x: 285, width: 75, height: 260, windowCols: 3, windowRows: 9, color: '#121a36' },
-            { x: 365, width: 75, height: 190, windowCols: 3, windowRows: 6, color: '#0b1021' }
-        ];
-
-        // Windows status array (randomly lit)
-        this.windowLights = [];
-        this.buildings.forEach((b, bIdx) => {
-            b.windows = [];
-            for (let r = 0; r < b.windowRows; r++) {
-                for (let c = 0; c < b.windowCols; c++) {
-                    b.windows.push({
-                        lit: Math.random() > 0.45,
-                        color: Math.random() > 0.3 ? '#ffdf7a' : (Math.random() > 0.5 ? '#7adfff' : '#ff7ab6'),
-                        flicker: Math.random() * Math.PI * 2
-                    });
-                }
-            }
-        });
-
-        // Cinematic Intro Animation State
-        // Phases: 0 = Web Shoot, 1 = Swing Arc, 2 = Backflip mid-air, 3 = Hero Landing Crouch, 4 = Idle Perch Pose
-        this.introPhase = 0;
-        this.introTime = 0;
-        this.introActive = true;
-        this.spideyPos = { x: -50, y: -50, rot: 0, scale: 1 };
-        this.landingImpact = 0; // Shockwave radius on superhero landing
-
-        // Mouse Move Listener (non-blocking)
-        this.onMouseMove = (e) => {
-            const rect = this.canvas.getBoundingClientRect();
-            this.mousePos.x = e.clientX - rect.left;
-            this.mousePos.y = e.clientY - rect.top;
+        // DYNAMIC CINEMATIC CAMERA SYSTEM
+        this.cam = {
+            x: 0,
+            y: 0,
+            zoom: 1.0,
+            targetZoom: 1.0,
+            angle: 0,
+            targetAngle: 0,
+            shake: 0
         };
-        window.addEventListener('mousemove', this.onMouseMove);
 
-        // Click Listener (non-blocking, triggers Web Thwip & Flip)
-        this.onClick = (e) => {
-            const rect = this.canvas.getBoundingClientRect();
-            const clickX = e.clientX - rect.left;
-            const clickY = e.clientY - rect.top;
-            if (clickX >= 0 && clickX <= this.width && clickY >= 0 && clickY <= this.height) {
-                this.triggerWebThwip(clickX, clickY);
-            }
-        };
-        this.canvas.addEventListener('click', this.onClick);
+        // AUTOMATIC HIGH-IMPACT ACTION ROUTINE SYSTEM
+        // Sequences: 'DIVE_SWING' -> 'CAMERA_CLOSEUP_FLIP' -> 'EPIC_HERO_LAND' -> 'ROOFTOP_PERCH' -> 'MOON_LAUNCH' -> loop
+        this.actionState = 'DIVE_SWING';
+        this.actionTime = 0;
+        this.spideyPos = { x: -100, y: -100, rot: 0, scale: 1.3, pose: 'SWING' };
+        this.landingImpact = 0;
 
         this.animate = this.animate.bind(this);
         this.animFrameId = requestAnimationFrame(this.animate);
     }
 
+    resize() {
+        this.width = this.canvas.width = window.innerWidth;
+        this.height = this.canvas.height = window.innerHeight;
+        this.centerX = this.width / 2;
+        this.centerY = this.height / 2;
+
+        const wrapper = this.canvas.closest('.avatar-canvas-wrapper');
+        if (wrapper) {
+            wrapper.classList.add('fullscreen-mode');
+        }
+
+        if (this.buildings) this.initBuildings();
+        if (this.stars) this.initStars();
+        if (this.dustParticles) this.initDustParticles();
+    }
+
+    initStars() {
+        this.stars = [];
+        const starCount = Math.max(100, Math.floor((this.width * this.height) / 7000));
+        for (let i = 0; i < starCount; i++) {
+            this.stars.push({
+                x: Math.random() * this.width,
+                y: Math.random() * (this.height * 0.65),
+                radius: Math.random() * 2.5 + 0.5,
+                alpha: Math.random() * 0.85 + 0.15,
+                twinkleSpeed: Math.random() * 0.05 + 0.01
+            });
+        }
+    }
+
+    initDustParticles() {
+        this.dustParticles = [];
+        for (let i = 0; i < 50; i++) {
+            this.dustParticles.push({
+                x: Math.random() * this.width,
+                y: Math.random() * this.height,
+                radius: Math.random() * 2.2 + 0.8,
+                vx: (Math.random() - 0.5) * 0.6,
+                vy: -Math.random() * 0.5 - 0.2,
+                alpha: Math.random() * 0.7 + 0.2
+            });
+        }
+    }
+
+    initBuildings() {
+        this.buildings = [];
+        const numBuildings = Math.max(10, Math.ceil(this.width / 130));
+        const bWidth = this.width / numBuildings;
+        const centerIdx = Math.floor(numBuildings / 2);
+
+        for (let i = 0; i < numBuildings; i++) {
+            const isCenter = (i === centerIdx || i === centerIdx - 1);
+            let bType = 'GENERIC';
+            let bHeight = 200 + Math.random() * 180;
+            let bName = '';
+            let bColor = (i % 2 === 0) ? '#080d1e' : '#0d152d';
+
+            if (i === 1) {
+                bType = 'OSCORP';
+                bHeight = 350;
+                bName = 'OSCORP';
+                bColor = '#0a142c';
+            } else if (i === numBuildings - 2) {
+                bType = 'BUGLE';
+                bHeight = 310;
+                bName = 'DAILY BUGLE';
+                bColor = '#170f24';
+            } else if (isCenter) {
+                bType = 'STAGE';
+                bHeight = 240;
+                bColor = '#050812';
+            }
+
+            const windowCols = Math.max(3, Math.floor(bWidth / 18));
+            const windowRows = Math.floor(bHeight / 24);
+            const windows = [];
+
+            for (let r = 0; r < windowRows; r++) {
+                for (let c = 0; c < windowCols; c++) {
+                    windows.push({
+                        lit: Math.random() > 0.35,
+                        color: Math.random() > 0.35 ? '#ffe875' : (Math.random() > 0.5 ? '#75e6ff' : '#ff75b0'),
+                        flicker: Math.random() * Math.PI * 2
+                    });
+                }
+            }
+
+            this.buildings.push({
+                x: i * bWidth,
+                width: bWidth + 3,
+                height: bHeight,
+                type: bType,
+                name: bName,
+                windowCols: windowCols,
+                windowRows: windowRows,
+                windows: windows,
+                color: bColor,
+                spire: (i % 3 === 2)
+            });
+        }
+    }
+
     setState(newState) {
         this.state = newState;
         if (newState === 'SPEAKING') {
-            // Shoot web strands periodically when speaking
-            this.triggerWebThwip(
-                this.centerX + (Math.random() - 0.5) * 200,
-                50 + Math.random() * 150
+            this.addWebCable(
+                this.spideyPos.x,
+                this.spideyPos.y,
+                this.centerX + (Math.random() - 0.5) * 500,
+                80 + Math.random() * 200
             );
+            this.spawnComicText('THWIP!', this.spideyPos.x, this.spideyPos.y - 60, '#00f0ff');
         }
     }
 
@@ -113,227 +175,411 @@ class SpiderCharacter {
     }
 
     setThemeColors(primary, secondary) {
-        // Keeps contract compatible with AppController theme switcher
-    }
-
-    playIntro() {
-        this.introPhase = 0;
-        this.introTime = 0;
-        this.introActive = true;
-        this.landingImpact = 0;
+        // Contract compatibility
     }
 
     stop() {
         if (this.animFrameId) {
             cancelAnimationFrame(this.animFrameId);
         }
-        if (this.onMouseMove) {
-            window.removeEventListener('mousemove', this.onMouseMove);
-        }
-        if (this.onClick) {
-            this.canvas.removeEventListener('click', this.onClick);
+        window.removeEventListener('resize', this.resize);
+        const wrapper = this.canvas.closest('.avatar-canvas-wrapper');
+        if (wrapper) {
+            wrapper.classList.remove('fullscreen-mode');
         }
     }
 
-    triggerWebThwip(targetX, targetY) {
-        const startX = this.spideyPos.x || (this.centerX + 20);
-        const startY = this.spideyPos.y || (this.centerY + 20);
-
+    addWebCable(startX, startY, targetX, targetY) {
         this.webLines.push({
             startX: startX,
             startY: startY,
             targetX: targetX,
             targetY: targetY,
             progress: 0,
-            life: 1.0,
-            maxLife: 1.0
+            life: 1.0
         });
 
-        // Generate sparks on web shoot
-        for (let i = 0; i < 8; i++) {
+        for (let i = 0; i < 15; i++) {
             const angle = Math.random() * Math.PI * 2;
-            const speed = Math.random() * 4 + 2;
+            const speed = Math.random() * 6 + 3;
             this.sparks.push({
                 x: targetX,
                 y: targetY,
                 vx: Math.cos(angle) * speed,
                 vy: Math.sin(angle) * speed,
-                radius: Math.random() * 2 + 1,
+                radius: Math.random() * 3 + 1,
                 alpha: 1.0,
-                color: '#ffffff'
+                color: Math.random() > 0.5 ? '#ffffff' : '#00f0ff'
             });
         }
+    }
+
+    spawnComicText(text, x, y, color = '#ff003c') {
+        this.comicTexts.push({
+            text: text,
+            x: x,
+            y: y,
+            scale: 0.2,
+            targetScale: 1.2 + Math.random() * 0.4,
+            alpha: 1.0,
+            rotation: (Math.random() - 0.5) * 0.4,
+            color: color
+        });
     }
 
     animate() {
         this.time += 0.03;
         this.ctx.clearRect(0, 0, this.width, this.height);
 
-        // 1. Draw NYC City Skyline Night Background
-        this.drawNYCBackground();
+        // Update Camera Matrix Target Values
+        this.updateCamera();
 
-        // 2. Update & Draw Web Shooting Particles
+        // Save Context for Cinematic Camera Transform & Screen Shake
+        this.ctx.save();
+        this.applyCameraTransform();
+
+        // 1. Render Cinematic Layered NYC Skyline Background
+        this.drawCinematicNYCBackground();
+
+        // 2. Render Atmospheric Dust Particles
+        this.updateAndDrawDust();
+
+        // 3. Render Web Cables & Energetic Sparks
         this.updateAndDrawWebs();
 
-        // 3. Update & Draw Intro Motion or Idle Perch State
-        if (this.introActive) {
-            this.updateIntroSequence();
-        } else {
-            // Idle position centered on skyscraper ledge
-            const floatBob = Math.sin(this.time * 2) * 5;
-            this.spideyPos.x = this.centerX;
-            this.spideyPos.y = 230 + floatBob;
-            this.spideyPos.rot = Math.sin(this.time * 1.2) * 0.05;
-            this.spideyPos.scale = 1;
-        }
+        // 4. Update High-Impact Movie Action State Machine
+        this.updateMovieActionRoutine();
 
-        // 4. Render Spider-Man Hero Model
-        this.drawSpiderMan(this.spideyPos.x, this.spideyPos.y, this.spideyPos.rot, this.spideyPos.scale);
+        // 5. Render High-Detail Spider-Man Model with Chromatic Glitch Shift
+        this.drawHighDetailSpiderMan(this.spideyPos.x, this.spideyPos.y, this.spideyPos.rot, this.spideyPos.scale, this.spideyPos.pose);
 
-        // 5. Draw Heroic Landing Impact Wave
+        // 6. Render Ground Impact Shockwave
         if (this.landingImpact > 0) {
             this.drawLandingImpact();
-            this.landingImpact -= 0.04;
+            this.landingImpact -= 0.035;
         }
+
+        // 7. Render Comic Pop-Art Texts ("THWIP!", "BOOM!")
+        this.updateAndDrawComicTexts();
+
+        this.ctx.restore(); // Restore Camera Transform
 
         this.animFrameId = requestAnimationFrame(this.animate);
     }
 
-    updateIntroSequence() {
-        this.introTime += 0.03;
+    updateCamera() {
+        // Smoothly interpolate camera zoom & tilt towards targets
+        this.cam.zoom += (this.cam.targetZoom - this.cam.zoom) * 0.08;
+        this.cam.angle += (this.cam.targetAngle - this.cam.angle) * 0.08;
 
-        if (this.introPhase === 0) {
-            // Phase 0: Web line shoots from top edge across canvas (0s to 0.4s)
-            const p = Math.min(1, this.introTime / 0.4);
-            const anchorX = 225;
-            const anchorY = 30;
+        // Apply decay to screen shake
+        if (this.cam.shake > 0) {
+            this.cam.shake *= 0.88;
+            if (this.cam.shake < 0.2) this.cam.shake = 0;
+        }
+    }
 
-            // Draw initial incoming web line
-            this.ctx.save();
-            this.ctx.beginPath();
-            this.ctx.moveTo(400, -20);
-            this.ctx.lineTo(400 + (anchorX - 400) * p, -20 + (anchorY - -20) * p);
-            this.ctx.strokeStyle = '#ffffff';
-            this.ctx.lineWidth = 3;
-            this.ctx.shadowBlur = 10;
-            this.ctx.shadowColor = '#00f0ff';
-            this.ctx.stroke();
-            this.ctx.restore();
+    applyCameraTransform() {
+        const ctx = this.ctx;
+        // Screen shake offset
+        const shakeX = (Math.random() - 0.5) * this.cam.shake;
+        const shakeY = (Math.random() - 0.5) * this.cam.shake;
 
-            this.spideyPos.x = -60;
-            this.spideyPos.y = -60;
+        ctx.translate(this.centerX + shakeX, this.centerY + shakeY);
+        ctx.scale(this.cam.zoom, this.cam.zoom);
+        ctx.rotate(this.cam.angle);
+        ctx.translate(-this.centerX, -this.centerY);
+    }
 
-            if (this.introTime >= 0.4) {
-                this.introPhase = 1;
-                this.introTime = 0;
-            }
-        } else if (this.introPhase === 1) {
-            // Phase 1: High speed pendulum swing across screen (0.4s to 1.3s)
-            const p = Math.min(1, this.introTime / 0.9);
-            // Swing arc parameterized path
-            const angle = -Math.PI * 0.7 + p * (Math.PI * 0.9);
-            const radius = 260;
-            const pivotX = 225;
-            const pivotY = 20;
+    updateMovieActionRoutine() {
+        this.actionTime += 0.03;
+
+        // ----------------------------------------------------
+        // SEQUENCE 1: DIVE_SWING (Wide View Pendulum Swing)
+        // ----------------------------------------------------
+        if (this.actionState === 'DIVE_SWING') {
+            const duration = 1.3;
+            const p = Math.min(1, this.actionTime / duration);
+
+            this.cam.targetZoom = 1.05;
+            this.cam.targetAngle = -0.06;
+
+            const pivotX = this.width * 0.45;
+            const pivotY = 50;
+            const radius = Math.min(this.width, this.height) * 0.58;
+            const angle = -Math.PI * 0.65 + p * (Math.PI * 0.85);
 
             this.spideyPos.x = pivotX + Math.sin(angle) * radius;
             this.spideyPos.y = pivotY + Math.cos(angle) * radius;
             this.spideyPos.rot = angle + Math.PI / 2;
+            this.spideyPos.scale = 1.3;
+            this.spideyPos.pose = 'SWING';
 
-            // Draw active swing web line attached to Spidey hand
-            this.ctx.save();
-            this.ctx.beginPath();
-            this.ctx.moveTo(pivotX, pivotY);
-            this.ctx.lineTo(this.spideyPos.x, this.spideyPos.y);
-            this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-            this.ctx.lineWidth = 2.5;
-            this.ctx.shadowBlur = 8;
-            this.ctx.shadowColor = '#ffffff';
-            this.ctx.stroke();
-            this.ctx.restore();
+            this.drawBraidedWebCable(pivotX, pivotY, this.spideyPos.x, this.spideyPos.y);
 
-            if (this.introTime >= 0.9) {
-                this.introPhase = 2;
-                this.introTime = 0;
+            if (p >= 1.0) {
+                this.actionState = 'CAMERA_CLOSEUP_FLIP';
+                this.actionTime = 0;
             }
-        } else if (this.introPhase === 2) {
-            // Phase 2: Release web & Acrobatic mid-air 360° backflip (0s to 0.7s)
-            const p = Math.min(1, this.introTime / 0.7);
-            // Parabolic jump curve
-            const jumpY = -Math.sin(p * Math.PI) * 70;
-            this.spideyPos.x = 170 + p * (225 - 170);
-            this.spideyPos.y = 220 + jumpY;
-            this.spideyPos.rot = p * Math.PI * 2; // 360 flip!
+        }
+        // ----------------------------------------------------
+        // SEQUENCE 2: CAMERA_CLOSEUP_FLIP (Zoom In 1.5x, 360° Flip & Comic "THWIP!")
+        // ----------------------------------------------------
+        else if (this.actionState === 'CAMERA_CLOSEUP_FLIP') {
+            const duration = 1.2;
+            const p = Math.min(1, this.actionTime / duration);
 
-            // Add backflip trailing sparks
-            if (Math.random() > 0.4) {
+            // DYNAMIC CAMERA CLOSE-UP ZOOM!
+            this.cam.targetZoom = 1.45;
+            this.cam.targetAngle = 0.08;
+
+            const startX = this.width * 0.2;
+            const targetX = this.centerX;
+            const jumpY = -Math.sin(p * Math.PI) * 170;
+
+            this.spideyPos.x = startX + p * (targetX - startX);
+            this.spideyPos.y = (this.height - 240) + jumpY;
+            this.spideyPos.rot = p * Math.PI * 4; // Double 720° somersault!
+            this.spideyPos.scale = 1.4;
+            this.spideyPos.pose = 'FLIP';
+
+            if (Math.abs(this.actionTime - 0.3) < 0.03) {
+                this.spawnComicText('THWIP!', this.spideyPos.x + 40, this.spideyPos.y - 40, '#00f0ff');
+            }
+
+            if (Math.random() > 0.2) {
                 this.sparks.push({
-                    x: this.spideyPos.x + (Math.random() - 0.5) * 30,
-                    y: this.spideyPos.y + (Math.random() - 0.5) * 30,
-                    vx: (Math.random() - 0.5) * 2,
-                    vy: (Math.random() - 0.5) * 2,
-                    radius: Math.random() * 2 + 1,
+                    x: this.spideyPos.x + (Math.random() - 0.5) * 50,
+                    y: this.spideyPos.y + (Math.random() - 0.5) * 50,
+                    vx: (Math.random() - 0.5) * 4,
+                    vy: (Math.random() - 0.5) * 4,
+                    radius: Math.random() * 3 + 1,
                     alpha: 1,
-                    color: '#ff3366'
+                    color: Math.random() > 0.5 ? '#ff003c' : '#00f0ff'
                 });
             }
 
-            if (this.introTime >= 0.7) {
-                this.introPhase = 3;
-                this.introTime = 0;
-                this.landingImpact = 1.0; // Trigger superhero landing ground flash!
+            if (p >= 1.0) {
+                this.actionState = 'EPIC_HERO_LAND';
+                this.actionTime = 0;
+                this.landingImpact = 1.0;
+                this.cam.shake = 18; // Trigger SCREEN SHAKE!
+                this.spawnComicText('BOOM!', this.centerX, this.height - 280, '#ff003c');
             }
-        } else if (this.introPhase === 3) {
-            // Phase 3: Superhero 3-point crouch landing & head rise (0s to 0.8s)
-            const p = Math.min(1, this.introTime / 0.8);
-            this.spideyPos.x = this.centerX;
-            this.spideyPos.y = 230 + (1 - p) * 15; // Smooth settle
-            this.spideyPos.rot = 0;
+        }
+        // ----------------------------------------------------
+        // SEQUENCE 3: EPIC_HERO_LAND (3-Point Landing Crouch with Screen Shake & Pop-Art "BOOM!")
+        // ----------------------------------------------------
+        else if (this.actionState === 'EPIC_HERO_LAND') {
+            const duration = 1.0;
+            const p = Math.min(1, this.actionTime / duration);
+            const targetY = this.height - 230;
 
-            if (this.introTime >= 0.8) {
-                this.introPhase = 4;
-                this.introActive = false;
+            this.cam.targetZoom = 1.3;
+            this.cam.targetAngle = 0;
+
+            this.spideyPos.x = this.centerX;
+            this.spideyPos.y = targetY + (1 - p) * 25;
+            this.spideyPos.rot = 0;
+            this.spideyPos.scale = 1.35;
+            this.spideyPos.pose = 'CROUCH_LAND';
+
+            if (p >= 1.0) {
+                this.actionState = 'ROOFTOP_PERCH';
+                this.actionTime = 0;
+            }
+        }
+        // ----------------------------------------------------
+        // SEQUENCE 4: ROOFTOP_PERCH (Rooftop Stand & Rapid Dual Web Shooting)
+        // ----------------------------------------------------
+        else if (this.actionState === 'ROOFTOP_PERCH') {
+            const duration = 2.2;
+            const p = Math.min(1, this.actionTime / duration);
+
+            this.cam.targetZoom = 1.1;
+            this.cam.targetAngle = -0.03;
+
+            const floatBob = Math.sin(this.actionTime * 3) * 6;
+            this.spideyPos.x = this.centerX;
+            this.spideyPos.y = (this.height - 230) + floatBob;
+            this.spideyPos.rot = Math.sin(this.actionTime * 1.5) * 0.03;
+            this.spideyPos.scale = 1.3;
+            this.spideyPos.pose = 'STAND_HERO';
+
+            if (Math.abs(this.actionTime - 0.4) < 0.03) {
+                this.addWebCable(this.spideyPos.x, this.spideyPos.y - 15, this.width * 0.15, 110);
+                this.spawnComicText('THWIP!', this.width * 0.18, 90, '#00f0ff');
+            }
+            if (Math.abs(this.actionTime - 1.2) < 0.03) {
+                this.addWebCable(this.spideyPos.x, this.spideyPos.y - 15, this.width * 0.85, 130);
+                this.spawnComicText('THWIP!', this.width * 0.82, 110, '#ffea75');
+            }
+
+            if (p >= 1.0) {
+                this.actionState = 'MOON_LAUNCH';
+                this.actionTime = 0;
+            }
+        }
+        // ----------------------------------------------------
+        // SEQUENCE 5: MOON_LAUNCH (High Altitude Launch across Moon)
+        // ----------------------------------------------------
+        else if (this.actionState === 'MOON_LAUNCH') {
+            const duration = 1.5;
+            const p = Math.min(1, this.actionTime / duration);
+
+            this.cam.targetZoom = 1.2;
+            this.cam.targetAngle = 0.05;
+
+            const pivotX = this.width * 0.35;
+            const pivotY = 40;
+            const radius = Math.min(this.width, this.height) * 0.58;
+            const angle = Math.PI * 0.62 - p * (Math.PI * 0.82);
+
+            this.spideyPos.x = pivotX + Math.sin(angle) * radius;
+            this.spideyPos.y = pivotY + Math.cos(angle) * radius;
+            this.spideyPos.rot = angle - Math.PI / 2;
+            this.spideyPos.scale = 1.3;
+            this.spideyPos.pose = 'SWING';
+
+            this.drawBraidedWebCable(pivotX, pivotY, this.spideyPos.x, this.spideyPos.y);
+
+            if (p >= 1.0) {
+                this.actionState = 'DIVE_SWING';
+                this.actionTime = 0;
             }
         }
     }
 
-    drawLandingImpact() {
+    drawBraidedWebCable(pivotX, pivotY, spideyX, spideyY) {
         const ctx = this.ctx;
-        const radius = (1 - this.landingImpact) * 120 + 20;
-
         ctx.save();
-        ctx.translate(this.centerX, 330);
-        ctx.scale(1, 0.35); // Oval perspective on ledge
 
+        // Main white web strand
         ctx.beginPath();
-        ctx.arc(0, 0, radius, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(255, 255, 255, ${this.landingImpact})`;
-        ctx.lineWidth = 4 * this.landingImpact;
-        ctx.shadowBlur = 20;
+        ctx.moveTo(pivotX, pivotY);
+        ctx.lineTo(spideyX, spideyY);
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 4;
+        ctx.shadowBlur = 18;
         ctx.shadowColor = '#00f0ff';
         ctx.stroke();
 
-        // Web shockwave web grid lines
-        for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
+        // Secondary cyan spiral web accent
+        ctx.beginPath();
+        ctx.moveTo(pivotX, pivotY);
+        const midX = (pivotX + spideyX) / 2 + Math.sin(this.time * 6) * 10;
+        const midY = (pivotY + spideyY) / 2 + Math.cos(this.time * 6) * 10;
+        ctx.quadraticCurveTo(midX, midY, spideyX, spideyY);
+        ctx.strokeStyle = 'rgba(0, 240, 255, 0.85)';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        // Anchor node spark
+        ctx.beginPath();
+        ctx.arc(pivotX, pivotY, 6, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = '#ffffff';
+        ctx.fill();
+        ctx.restore();
+    }
+
+    drawLandingImpact() {
+        const ctx = this.ctx;
+        const targetY = this.height - 130;
+        const radius = (1 - this.landingImpact) * 280 + 35;
+
+        ctx.save();
+        ctx.translate(this.centerX, targetY);
+        ctx.scale(1, 0.32);
+
+        // Outer cyan ring
+        ctx.beginPath();
+        ctx.arc(0, 0, radius, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(0, 240, 255, ${this.landingImpact})`;
+        ctx.lineWidth = 7 * this.landingImpact;
+        ctx.shadowBlur = 35;
+        ctx.shadowColor = '#00f0ff';
+        ctx.stroke();
+
+        // Inner crimson ring
+        ctx.beginPath();
+        ctx.arc(0, 0, radius * 0.65, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(255, 0, 60, ${this.landingImpact})`;
+        ctx.lineWidth = 5 * this.landingImpact;
+        ctx.stroke();
+
+        // Radial web shockwave spokes
+        for (let a = 0; a < Math.PI * 2; a += Math.PI / 8) {
             ctx.beginPath();
             ctx.moveTo(0, 0);
             ctx.lineTo(Math.cos(a) * radius, Math.sin(a) * radius);
-            ctx.strokeStyle = `rgba(255, 50, 80, ${this.landingImpact * 0.7})`;
-            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = `rgba(255, 255, 255, ${this.landingImpact * 0.85})`;
+            ctx.lineWidth = 2.5;
             ctx.stroke();
         }
 
         ctx.restore();
     }
 
-    drawNYCBackground() {
+    updateAndDrawComicTexts() {
         const ctx = this.ctx;
 
-        // Dark Atmospheric Night Sky Gradient
+        for (let i = this.comicTexts.length - 1; i >= 0; i--) {
+            const t = this.comicTexts[i];
+            t.scale += (t.targetScale - t.scale) * 0.2;
+            t.alpha -= 0.02;
+
+            ctx.save();
+            ctx.translate(t.x, t.y);
+            ctx.rotate(t.rotation);
+            ctx.scale(t.scale, t.scale);
+
+            // Comic Pop-Art Badge Background Starburst
+            ctx.beginPath();
+            const points = 10;
+            for (let p = 0; p < points * 2; p++) {
+                const r = (p % 2 === 0) ? 55 : 30;
+                const a = (p / (points * 2)) * Math.PI * 2;
+                const px = Math.cos(a) * r;
+                const py = Math.sin(a) * r;
+                if (p === 0) ctx.moveTo(px, py);
+                else ctx.lineTo(px, py);
+            }
+            ctx.closePath();
+            ctx.fillStyle = t.color;
+            ctx.globalAlpha = Math.max(0, t.alpha * 0.85);
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = t.color;
+            ctx.fill();
+
+            // Text Label
+            ctx.fillStyle = '#ffffff';
+            ctx.font = '900 24px "Space Grotesk", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#ffffff';
+            ctx.globalAlpha = Math.max(0, t.alpha);
+            ctx.fillText(t.text, 0, 0);
+
+            ctx.restore();
+
+            if (t.alpha <= 0) {
+                this.comicTexts.splice(i, 1);
+            }
+        }
+    }
+
+    drawCinematicNYCBackground() {
+        const ctx = this.ctx;
+
+        // Rich Movie Atmospheric Night Sky Gradient (Deep Indigo to Cyber Night)
         const skyGrad = ctx.createLinearGradient(0, 0, 0, this.height);
-        skyGrad.addColorStop(0, '#060913');
-        skyGrad.addColorStop(0.5, '#0d152a');
-        skyGrad.addColorStop(1, '#182038');
+        skyGrad.addColorStop(0, '#040714');
+        skyGrad.addColorStop(0.4, '#0a122c');
+        skyGrad.addColorStop(0.8, '#141d3d');
+        skyGrad.addColorStop(1, '#1d274a');
         ctx.fillStyle = skyGrad;
         ctx.fillRect(0, 0, this.width, this.height);
 
@@ -341,7 +587,7 @@ class SpiderCharacter {
         ctx.save();
         this.stars.forEach(s => {
             s.alpha += Math.sin(this.time * 5 * s.twinkleSpeed) * 0.015;
-            s.alpha = Math.max(0.1, Math.min(0.9, s.alpha));
+            s.alpha = Math.max(0.1, Math.min(0.95, s.alpha));
             ctx.beginPath();
             ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
             ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`;
@@ -351,106 +597,154 @@ class SpiderCharacter {
         });
         ctx.restore();
 
-        // Glowing NYC Full Moon
+        // Giant Textured 3D Moon with Atmospheric Cyan Glow
         ctx.save();
-        const moonX = 360;
-        const moonY = 80;
-        const moonRadius = 38;
+        const moonX = this.width - 180;
+        const moonY = 120;
+        const moonRadius = 65;
 
-        const moonGlow = ctx.createRadialGradient(moonX, moonY, moonRadius * 0.8, moonX, moonY, moonRadius * 2.5);
-        moonGlow.addColorStop(0, 'rgba(255, 255, 230, 0.9)');
-        moonGlow.addColorStop(0.4, 'rgba(0, 240, 255, 0.2)');
+        const moonGlow = ctx.createRadialGradient(moonX, moonY, moonRadius * 0.7, moonX, moonY, moonRadius * 3.2);
+        moonGlow.addColorStop(0, 'rgba(255, 255, 240, 0.95)');
+        moonGlow.addColorStop(0.3, 'rgba(0, 240, 255, 0.3)');
+        moonGlow.addColorStop(0.7, 'rgba(112, 0, 255, 0.12)');
         moonGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
         ctx.beginPath();
-        ctx.arc(moonX, moonY, moonRadius * 2.5, 0, Math.PI * 2);
+        ctx.arc(moonX, moonY, moonRadius * 3.2, 0, Math.PI * 2);
         ctx.fillStyle = moonGlow;
         ctx.fill();
 
         ctx.beginPath();
         ctx.arc(moonX, moonY, moonRadius, 0, Math.PI * 2);
         ctx.fillStyle = '#fffdf0';
-        ctx.shadowBlur = 25;
+        ctx.shadowBlur = 40;
         ctx.shadowColor = '#ffffdd';
         ctx.fill();
 
-        // Moon craters
-        ctx.fillStyle = 'rgba(210, 210, 190, 0.35)';
+        // Moon Craters
+        ctx.fillStyle = 'rgba(190, 190, 170, 0.35)';
         ctx.beginPath();
-        ctx.arc(moonX - 10, moonY - 8, 8, 0, Math.PI * 2);
-        ctx.arc(moonX + 12, moonY + 10, 6, 0, Math.PI * 2);
-        ctx.arc(moonX - 6, moonY + 14, 5, 0, Math.PI * 2);
+        ctx.arc(moonX - 16, moonY - 12, 13, 0, Math.PI * 2);
+        ctx.arc(moonX + 20, moonY + 16, 9, 0, Math.PI * 2);
+        ctx.arc(moonX - 10, moonY + 22, 8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Drifting Clouds over Moon
+        const cloudX = moonX + Math.sin(this.time * 0.3) * 28 - 45;
+        ctx.fillStyle = 'rgba(20, 30, 60, 0.45)';
+        ctx.beginPath();
+        ctx.ellipse(cloudX, moonY + 10, 80, 24, 0, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
 
-        // Searchlight Spotlight beams across sky
+        // Searchlight Spotlight Beams with Light Shaft Volumetrics
         ctx.save();
-        const beamAngle = Math.sin(this.time * 0.8) * 0.25;
-        ctx.translate(100, 350);
+        const beamAngle = Math.sin(this.time * 0.6) * 0.32;
+        ctx.translate(this.width * 0.2, this.height);
         ctx.rotate(beamAngle);
-        const beamGrad = ctx.createLinearGradient(0, 0, 0, -350);
-        beamGrad.addColorStop(0, 'rgba(0, 240, 255, 0.15)');
+
+        const beamGrad = ctx.createLinearGradient(0, 0, 0, -this.height * 0.95);
+        beamGrad.addColorStop(0, 'rgba(0, 240, 255, 0.25)');
+        beamGrad.addColorStop(0.6, 'rgba(0, 240, 255, 0.09)');
         beamGrad.addColorStop(1, 'rgba(0, 240, 255, 0)');
         ctx.beginPath();
-        ctx.moveTo(-15, 0);
-        ctx.lineTo(-60, -350);
-        ctx.lineTo(60, -350);
-        ctx.lineTo(15, 0);
+        ctx.moveTo(-35, 0);
+        ctx.lineTo(-120, -this.height * 0.95);
+        ctx.lineTo(120, -this.height * 0.95);
+        ctx.lineTo(35, 0);
         ctx.fillStyle = beamGrad;
         ctx.fill();
         ctx.restore();
 
-        // Draw Buildings & Illuminated Windows
-        this.buildings.forEach((b, bIdx) => {
+        // Render Layered NYC Skyscrapers (Oscorp, Daily Bugle, Stage)
+        this.buildings.forEach(b => {
             const bY = this.height - b.height;
             ctx.save();
 
-            // Building body
-            ctx.fillStyle = b.color;
+            const bGrad = ctx.createLinearGradient(b.x, bY, b.x + b.width, bY + b.height);
+            bGrad.addColorStop(0, b.color);
+            bGrad.addColorStop(1, '#050914');
+
+            ctx.fillStyle = bGrad;
             ctx.fillRect(b.x, bY, b.width, b.height);
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-            ctx.lineWidth = 1;
+
+            ctx.strokeStyle = 'rgba(0, 240, 255, 0.18)';
+            ctx.lineWidth = 1.5;
             ctx.strokeRect(b.x, bY, b.width, b.height);
 
-            // Spire if applicable
-            if (b.spire) {
+            // OSCORP TOWER (Slanted Glass Top & Neon Sign)
+            if (b.type === 'OSCORP') {
                 ctx.beginPath();
-                ctx.moveTo(b.x + b.width / 2 - 4, bY);
-                ctx.lineTo(b.x + b.width / 2, bY - 45);
-                ctx.lineTo(b.x + b.width / 2 + 4, bY);
-                ctx.fillStyle = '#ff3366';
+                ctx.moveTo(b.x, bY + 40);
+                ctx.lineTo(b.x + b.width, bY);
+                ctx.lineTo(b.x + b.width, bY + 40);
+                ctx.fillStyle = 'rgba(0, 240, 255, 0.25)';
                 ctx.fill();
 
-                // Blinking red aviation hazard light
+                ctx.fillStyle = '#00f0ff';
+                ctx.font = 'bold 18px "Space Grotesk", sans-serif';
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = '#00f0ff';
+                ctx.fillText('OSCORP', b.x + 10, bY + 70);
+            }
+
+            // DAILY BUGLE TOWER (Classic Brick & Giant Red Billboard)
+            if (b.type === 'BUGLE') {
+                const bbX = b.x + 6;
+                const bbY = bY + 20;
+                const bbW = b.width - 12;
+                const bbH = 45;
+
+                ctx.fillStyle = '#ff003c';
+                ctx.shadowBlur = 22;
+                ctx.shadowColor = '#ff003c';
+                ctx.fillRect(bbX, bbY, bbW, bbH);
+
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '900 13px "Space Grotesk", sans-serif';
+                ctx.shadowBlur = 12;
+                ctx.shadowColor = '#ffffff';
+                ctx.fillText('DAILY BUGLE', bbX + 4, bbY + 28);
+            }
+
+            // Building Spire Hazard Lights
+            if (b.spire) {
+                ctx.beginPath();
+                ctx.moveTo(b.x + b.width / 2 - 5, bY);
+                ctx.lineTo(b.x + b.width / 2, bY - 60);
+                ctx.lineTo(b.x + b.width / 2 + 5, bY);
+                ctx.fillStyle = '#ff003c';
+                ctx.fill();
+
                 if (Math.sin(this.time * 6) > 0) {
                     ctx.beginPath();
-                    ctx.arc(b.x + b.width / 2, bY - 45, 3, 0, Math.PI * 2);
-                    ctx.fillStyle = '#ff0033';
-                    ctx.shadowBlur = 10;
-                    ctx.shadowColor = '#ff0033';
+                    ctx.arc(b.x + b.width / 2, bY - 60, 4, 0, Math.PI * 2);
+                    ctx.fillStyle = '#ff003c';
+                    ctx.shadowBlur = 15;
+                    ctx.shadowColor = '#ff003c';
                     ctx.fill();
                 }
             }
 
-            // Draw Windows
-            const colWidth = (b.width - 16) / b.windowCols;
+            // Window Lights
+            const colWidth = (b.width - 14) / b.windowCols;
             const rowHeight = (b.height - 30) / b.windowRows;
 
             b.windows.forEach((w, wIdx) => {
                 const r = Math.floor(wIdx / b.windowCols);
                 const c = wIdx % b.windowCols;
-                const wx = b.x + 8 + c * colWidth + 2;
+                const wx = b.x + 7 + c * colWidth + 2;
                 const wy = bY + 15 + r * rowHeight + 2;
 
                 if (w.lit) {
-                    const flickerAlpha = 0.6 + Math.sin(this.time * 3 + w.flicker) * 0.25;
+                    const flickerAlpha = 0.65 + Math.sin(this.time * 3 + w.flicker) * 0.25;
                     ctx.fillStyle = w.color;
                     ctx.globalAlpha = flickerAlpha;
                     ctx.shadowBlur = 6;
                     ctx.shadowColor = w.color;
                     ctx.fillRect(wx, wy, colWidth - 4, rowHeight - 4);
                 } else {
-                    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
                     ctx.globalAlpha = 1.0;
                     ctx.fillRect(wx, wy, colWidth - 4, rowHeight - 4);
                 }
@@ -459,30 +753,63 @@ class SpiderCharacter {
             ctx.restore();
         });
 
-        // Center Skyscraper Top Ledge (Spidey's stage platform)
+        // Foreground Stage Building Rooftop Ledge
         ctx.save();
-        ctx.fillStyle = '#080c17';
-        ctx.fillRect(140, 310, 170, 140);
-        ctx.strokeStyle = '#1e294a';
-        ctx.lineWidth = 3;
-        ctx.strokeRect(140, 310, 170, 140);
+        const ledgeWidth = 260;
+        const ledgeX = this.centerX - ledgeWidth / 2;
+        const ledgeY = this.height - 180;
 
-        // Ledge neon rim line
+        ctx.fillStyle = '#050812';
+        ctx.fillRect(ledgeX, ledgeY, ledgeWidth, 180);
+        ctx.strokeStyle = '#1a274a';
+        ctx.lineWidth = 3;
+        ctx.strokeRect(ledgeX, ledgeY, ledgeWidth, 180);
+
+        // Neon Red Rim Lighting on Ledge Edge
         ctx.beginPath();
-        ctx.moveTo(140, 310);
-        ctx.lineTo(310, 310);
-        ctx.strokeStyle = '#ff3366';
-        ctx.lineWidth = 2.5;
-        ctx.shadowBlur = 12;
-        ctx.shadowColor = '#ff3366';
+        ctx.moveTo(ledgeX, ledgeY);
+        ctx.lineTo(ledgeX + ledgeWidth, ledgeY);
+        ctx.strokeStyle = '#ff003c';
+        ctx.lineWidth = 4;
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = '#ff003c';
         ctx.stroke();
+        ctx.restore();
+
+        // Atmospheric Fog
+        ctx.save();
+        const fogGrad = ctx.createLinearGradient(0, this.height - 100, 0, this.height);
+        fogGrad.addColorStop(0, 'rgba(10, 18, 40, 0)');
+        fogGrad.addColorStop(1, 'rgba(10, 18, 40, 0.7)');
+        ctx.fillStyle = fogGrad;
+        ctx.fillRect(0, this.height - 100, this.width, 100);
+        ctx.restore();
+    }
+
+    updateAndDrawDust() {
+        const ctx = this.ctx;
+        ctx.save();
+        this.dustParticles.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+
+            if (p.y < 0) p.y = this.height;
+            if (p.x < 0) p.x = this.width;
+            if (p.x > this.width) p.x = 0;
+
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(0, 240, 255, ${p.alpha})`;
+            ctx.shadowBlur = 6;
+            ctx.shadowColor = '#00f0ff';
+            ctx.fill();
+        });
         ctx.restore();
     }
 
     updateAndDrawWebs() {
         const ctx = this.ctx;
 
-        // Draw active web shooting lines
         for (let i = this.webLines.length - 1; i >= 0; i--) {
             const w = this.webLines[i];
             w.progress = Math.min(1.0, w.progress + 0.12);
@@ -496,14 +823,13 @@ class SpiderCharacter {
             ctx.moveTo(w.startX, w.startY);
             ctx.lineTo(currX, currY);
             ctx.strokeStyle = `rgba(255, 255, 255, ${w.life})`;
-            ctx.lineWidth = 2.5;
-            ctx.shadowBlur = 10;
+            ctx.lineWidth = 3.8;
+            ctx.shadowBlur = 18;
             ctx.shadowColor = '#00f0ff';
             ctx.stroke();
 
-            // Web impact burst head
             ctx.beginPath();
-            ctx.arc(currX, currY, 4, 0, Math.PI * 2);
+            ctx.arc(currX, currY, 5.5, 0, Math.PI * 2);
             ctx.fillStyle = '#ffffff';
             ctx.fill();
             ctx.restore();
@@ -513,7 +839,6 @@ class SpiderCharacter {
             }
         }
 
-        // Draw web particle sparks
         for (let i = this.sparks.length - 1; i >= 0; i--) {
             const s = this.sparks[i];
             s.x += s.vx;
@@ -525,7 +850,7 @@ class SpiderCharacter {
             ctx.arc(s.x, s.y, s.radius, 0, Math.PI * 2);
             ctx.fillStyle = s.color;
             ctx.globalAlpha = Math.max(0, s.alpha);
-            ctx.shadowBlur = 6;
+            ctx.shadowBlur = 10;
             ctx.shadowColor = s.color;
             ctx.fill();
             ctx.restore();
@@ -536,7 +861,7 @@ class SpiderCharacter {
         }
     }
 
-    drawSpiderMan(x, y, rotation, scale) {
+    drawHighDetailSpiderMan(x, y, rotation, scale, pose) {
         const ctx = this.ctx;
 
         ctx.save();
@@ -544,173 +869,175 @@ class SpiderCharacter {
         ctx.rotate(rotation);
         ctx.scale(scale, scale);
 
-        // Head tracking angle towards mouse
-        const dx = this.mousePos.x - x;
-        const dy = this.mousePos.y - y;
-        this.headAngle = Math.atan2(dy, dx) * 0.15; // Subtle natural head tilt
+        // SPIDER-VERSE CHROMATIC ABERRATION GLITCH SHIFT EFFECT
+        if (pose === 'FLIP' || pose === 'SWING') {
+            ctx.save();
+            ctx.translate(-4, -2);
+            this.drawSpiderManBodyGeometry(ctx, 'rgba(0, 240, 255, 0.45)', pose);
+            ctx.restore();
 
-        // 1. Draw Spider-Man Body (Chibi / Superhero Mascot Proportions)
-        const suitRed = '#e6002e';
-        const suitBlue = '#0d2b6b';
-        const webLineColor = 'rgba(20, 20, 35, 0.7)';
+            ctx.save();
+            ctx.translate(4, 2);
+            this.drawSpiderManBodyGeometry(ctx, 'rgba(255, 0, 60, 0.45)', pose);
+            ctx.restore();
+        }
 
-        // Shadows
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+        // Main Spider-Man Render
+        this.drawSpiderManBodyGeometry(ctx, null, pose);
+
+        ctx.restore();
+    }
+
+    drawSpiderManBodyGeometry(ctx, overrideColor = null, pose = 'SWING') {
+        const suitRed = overrideColor || '#ff003c';
+        const suitBlue = overrideColor || '#0a1d4a';
+        const webLineColor = 'rgba(15, 20, 35, 0.85)';
+
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.75)';
+
+        if (pose === 'CROUCH_LAND') {
+            ctx.scale(1.1, 0.85);
+        }
 
         // Torso / Legs
         ctx.beginPath();
-        ctx.ellipse(0, 45, 32, 40, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, 42, 34, 42, 0, 0, Math.PI * 2);
         ctx.fillStyle = suitBlue;
         ctx.fill();
 
-        // Red Chest V-Vest
+        // Red V-Chest Vest
         ctx.beginPath();
-        ctx.moveTo(-28, 15);
-        ctx.lineTo(0, 75);
-        ctx.lineTo(28, 15);
-        ctx.lineTo(22, 10);
-        ctx.lineTo(0, 50);
-        ctx.lineTo(-22, 10);
+        ctx.moveTo(-30, 12);
+        ctx.lineTo(0, 78);
+        ctx.lineTo(30, 12);
+        ctx.lineTo(24, 8);
+        ctx.lineTo(0, 52);
+        ctx.lineTo(-24, 8);
         ctx.fillStyle = suitRed;
         ctx.fill();
 
-        // Black Spider Emblem on Chest
+        // Spider Emblem
         ctx.save();
-        ctx.translate(0, 35);
+        ctx.translate(0, 34);
         ctx.beginPath();
-        ctx.ellipse(0, 0, 5, 8, 0, 0, Math.PI * 2);
-        ctx.fillStyle = '#0a0a10';
+        ctx.ellipse(0, 0, 6, 9, 0, 0, Math.PI * 2);
+        ctx.fillStyle = '#060810';
         ctx.fill();
 
-        // Spider Legs
-        ctx.strokeStyle = '#0a0a10';
-        ctx.lineWidth = 1.8;
+        ctx.strokeStyle = '#060810';
+        ctx.lineWidth = 2.2;
         for (let i = -1; i <= 1; i += 2) {
             ctx.beginPath();
-            ctx.moveTo(0, -3);
-            ctx.lineTo(i * 12, -8);
-            ctx.lineTo(i * 15, -4);
+            ctx.moveTo(0, -4);
+            ctx.lineTo(i * 14, -10);
+            ctx.lineTo(i * 18, -5);
             ctx.stroke();
 
             ctx.beginPath();
-            ctx.moveTo(0, 3);
-            ctx.lineTo(i * 14, 6);
-            ctx.lineTo(i * 18, 12);
+            ctx.moveTo(0, 4);
+            ctx.lineTo(i * 16, 8);
+            ctx.lineTo(i * 20, 15);
             ctx.stroke();
         }
         ctx.restore();
 
-        // Arms (Left Arm Resting, Right Arm in "THWIP" Web Shooting Pose)
-        const isSpeakingOrClicking = this.state === 'SPEAKING' || this.webLines.length > 0;
-        const armWave = isSpeakingOrClicking ? Math.sin(this.time * 12) * 10 : Math.sin(this.time * 2) * 3;
+        // Arms
+        const isSpeakingOrThwipping = this.state === 'SPEAKING' || this.webLines.length > 0;
+        const armWave = isSpeakingOrThwipping ? Math.sin(this.time * 12) * 10 : Math.sin(this.time * 2) * 3;
 
         // Left Arm
         ctx.save();
-        ctx.translate(-28, 20);
-        ctx.rotate(-0.3 + armWave * 0.02);
+        ctx.translate(-30, 18);
+        ctx.rotate(-0.35 + armWave * 0.02);
         ctx.beginPath();
-        ctx.ellipse(0, 20, 10, 22, 0.2, 0, Math.PI * 2);
+        ctx.ellipse(0, 22, 11, 24, 0.2, 0, Math.PI * 2);
         ctx.fillStyle = suitRed;
         ctx.fill();
 
-        // Left Glove
         ctx.beginPath();
-        ctx.arc(0, 38, 9, 0, Math.PI * 2);
+        ctx.arc(0, 42, 10, 0, Math.PI * 2);
         ctx.fillStyle = suitRed;
         ctx.fill();
         ctx.restore();
 
-        // Right Arm (Signature Spidey Thwip Gesture!)
+        // Right Arm (Thwip Gesture)
         ctx.save();
-        ctx.translate(28, 20);
-        const rArmAngle = isSpeakingOrClicking ? -0.8 : (this.state === 'LISTENING' ? -0.4 : 0.2);
+        ctx.translate(30, 18);
+        const rArmAngle = isSpeakingOrThwipping ? -0.85 : (this.state === 'LISTENING' ? -0.4 : 0.25);
         ctx.rotate(rArmAngle);
         ctx.beginPath();
-        ctx.ellipse(0, 20, 10, 22, -0.2, 0, Math.PI * 2);
+        ctx.ellipse(0, 22, 11, 24, -0.2, 0, Math.PI * 2);
         ctx.fillStyle = suitRed;
         ctx.fill();
 
-        // Thwip Hand (Index + Pinky extended, middle fingers folded)
         ctx.beginPath();
-        ctx.arc(0, 38, 9, 0, Math.PI * 2);
+        ctx.arc(0, 42, 10, 0, Math.PI * 2);
         ctx.fillStyle = suitRed;
         ctx.fill();
 
-        ctx.strokeStyle = '#a00020';
-        ctx.lineWidth = 2;
-        // Index Finger
+        ctx.strokeStyle = '#a00028';
+        ctx.lineWidth = 2.4;
         ctx.beginPath();
-        ctx.moveTo(4, 38);
-        ctx.lineTo(12, 48);
+        ctx.moveTo(4, 42);
+        ctx.lineTo(14, 54);
         ctx.stroke();
-        // Pinky Finger
         ctx.beginPath();
-        ctx.moveTo(-4, 38);
-        ctx.lineTo(-10, 48);
+        ctx.moveTo(-4, 42);
+        ctx.lineTo(-12, 54);
         ctx.stroke();
         ctx.restore();
 
-        // 2. Draw Spider-Man Head (Mask & Lenses)
+        // Head Mask
         ctx.save();
-        ctx.translate(0, -15);
-        ctx.rotate(this.headAngle);
+        ctx.translate(0, -18);
 
-        // Head Mask Outline
         ctx.beginPath();
-        ctx.ellipse(0, 0, 45, 48, 0, 0, Math.PI * 2);
+        ctx.ellipse(0, 0, 48, 50, 0, 0, Math.PI * 2);
         ctx.fillStyle = suitRed;
-        ctx.shadowBlur = 20;
-        ctx.shadowColor = '#e6002e';
+        ctx.shadowBlur = 25;
+        ctx.shadowColor = '#ff003c';
         ctx.fill();
 
-        // Web Pattern Lines on Mask
+        // Web Mesh on Mask
         ctx.save();
-        ctx.clip(); // Clip web lines strictly within head boundary
+        ctx.clip();
         ctx.strokeStyle = webLineColor;
-        ctx.lineWidth = 1.2;
+        ctx.lineWidth = 1.3;
 
-        // Concentric Web Rings
-        for (let r = 12; r <= 48; r += 12) {
+        for (let r = 12; r <= 50; r += 12) {
             ctx.beginPath();
             ctx.arc(0, -5, r, 0, Math.PI * 2);
             ctx.stroke();
         }
-        // Radial Web Lines from Nose/Center
         for (let a = 0; a < Math.PI * 2; a += Math.PI / 6) {
             ctx.beginPath();
             ctx.moveTo(0, -5);
-            ctx.lineTo(Math.cos(a) * 50, -5 + Math.sin(a) * 50);
+            ctx.lineTo(Math.cos(a) * 55, -5 + Math.sin(a) * 55);
             ctx.stroke();
         }
         ctx.restore();
 
-        // 3. Draw Iconic Expressive Spider-Man Eye Lenses (White with thick black rim)
+        // Eye Lenses
         this.drawSpideyLenses(ctx);
 
-        ctx.restore(); // End Head translate
-
-        ctx.restore(); // End Character translate
+        ctx.restore(); // Head
     }
 
     drawSpideyLenses(ctx) {
-        // Calculate lens eye animations based on state & audio amplitude
         let lensSquintL = 1.0;
         let lensSquintR = 1.0;
         let lensScale = 1.0;
         let glowColor = '#ffffff';
 
         if (this.state === 'LISTENING') {
-            // Wide glowing attentive lenses
-            lensScale = 1.15;
+            lensScale = 1.18;
             glowColor = '#00f0ff';
         } else if (this.state === 'THINKING') {
-            // Asymmetric thoughtful squint (One eye narrowed, one eye wide)
             lensSquintL = 0.45 + Math.sin(this.time * 4) * 0.1;
             lensSquintR = 1.1;
             lensScale = 1.05;
         } else if (this.state === 'SPEAKING') {
-            // Dynamic lens pulse & squinting synchronously with audio amplitude!
             const talkAmp = this.audioAmplitude * 2.5;
             lensSquintL = 0.8 + Math.sin(this.time * 15) * 0.25 + talkAmp * 0.3;
             lensSquintR = 0.8 + Math.cos(this.time * 15) * 0.25 + talkAmp * 0.3;
@@ -718,8 +1045,7 @@ class SpiderCharacter {
             glowColor = '#ffeb3b';
         }
 
-        // Draw Left and Right Lenses
-        const lensOffsetX = 18;
+        const lensOffsetX = 19;
         const lensOffsetY = -5;
 
         for (let side = -1; side <= 1; side += 2) {
@@ -729,40 +1055,37 @@ class SpiderCharacter {
             ctx.translate(side * lensOffsetX, lensOffsetY);
             ctx.scale(side * lensScale, lensScale * squint);
 
-            // Black Thick Outer Lens Rim Frame
             ctx.beginPath();
-            ctx.moveTo(0, -18);
-            ctx.bezierCurveTo(14, -18, 22, -4, 20, 14);
-            ctx.bezierCurveTo(12, 18, -4, 12, -18, 0);
-            ctx.bezierCurveTo(-18, -12, -10, -18, 0, -18);
-            ctx.fillStyle = '#0c0e14';
-            ctx.shadowBlur = 12;
-            ctx.shadowColor = glowColor;
-            ctx.fill();
-
-            // Inner Glowing White Glass Lens
-            ctx.beginPath();
-            ctx.moveTo(0, -14);
-            ctx.bezierCurveTo(10, -14, 17, -3, 15, 10);
-            ctx.bezierCurveTo(9, 13, -3, 9, -13, 0);
-            ctx.bezierCurveTo(-13, -9, -7, -14, 0, -14);
-
-            const glassGrad = ctx.createLinearGradient(0, -14, 0, 10);
-            glassGrad.addColorStop(0, '#ffffff');
-            glassGrad.addColorStop(0.7, '#e0f7fc');
-            glassGrad.addColorStop(1, '#b2ebf2');
-
-            ctx.fillStyle = glassGrad;
+            ctx.moveTo(0, -20);
+            ctx.bezierCurveTo(15, -20, 24, -4, 22, 15);
+            ctx.bezierCurveTo(13, 20, -4, 13, -20, 0);
+            ctx.bezierCurveTo(-20, -13, -11, -20, 0, -20);
+            ctx.fillStyle = '#060810';
             ctx.shadowBlur = 15;
             ctx.shadowColor = glowColor;
             ctx.fill();
 
-            // Inner Lens Mesh Reflection Line
             ctx.beginPath();
-            ctx.moveTo(-6, -8);
-            ctx.lineTo(8, 2);
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-            ctx.lineWidth = 2;
+            ctx.moveTo(0, -15);
+            ctx.bezierCurveTo(11, -15, 18, -3, 16, 11);
+            ctx.bezierCurveTo(10, 14, -3, 10, -14, 0);
+            ctx.bezierCurveTo(-14, -10, -8, -15, 0, -15);
+
+            const glassGrad = ctx.createLinearGradient(0, -15, 0, 11);
+            glassGrad.addColorStop(0, '#ffffff');
+            glassGrad.addColorStop(0.65, '#e0f8ff');
+            glassGrad.addColorStop(1, '#a6f0ff');
+
+            ctx.fillStyle = glassGrad;
+            ctx.shadowBlur = 18;
+            ctx.shadowColor = glowColor;
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(-6, -9);
+            ctx.lineTo(9, 2);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+            ctx.lineWidth = 2.2;
             ctx.stroke();
 
             ctx.restore();

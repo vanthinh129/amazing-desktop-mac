@@ -251,6 +251,24 @@ html, body {
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: all 0.4s ease;
+}
+
+.avatar-canvas-wrapper.fullscreen-mode {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+    pointer-events: none;
+}
+
+.avatar-canvas-wrapper.fullscreen-mode #characterCanvas {
+    width: 100vw;
+    height: 100vh;
+    filter: none;
+    pointer-events: auto;
 }
 
 #characterCanvas {
