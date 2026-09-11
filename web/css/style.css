@@ -669,13 +669,13 @@ html, body {
     color: var(--text-muted);
 }
 
-.theme-options {
+.theme-options, .character-options {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 0.6rem;
 }
 
-.theme-btn {
+.theme-btn, .character-btn {
     padding: 0.6rem;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.12);
@@ -687,7 +687,8 @@ html, body {
     transition: all 0.2s ease;
 }
 
-.theme-btn.active, .theme-btn:hover {
+.theme-btn.active, .theme-btn:hover,
+.character-btn.active, .character-btn:hover {
     border-color: var(--primary-color);
     background: rgba(255, 255, 255, 0.15);
     color: var(--primary-color);

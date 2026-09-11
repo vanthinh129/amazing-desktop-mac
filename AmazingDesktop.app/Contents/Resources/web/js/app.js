@@ -103,7 +103,32 @@ class AppController {
     }
 
     initCharacter() {
-        window.aiCharacter = new AICharacter('characterCanvas');
+        const savedChar = localStorage.getItem('active_character') || 'spiderman';
+        this.switchCharacter(savedChar);
+    }
+
+    switchCharacter(type) {
+        if (window.aiCharacter && typeof window.aiCharacter.stop === 'function') {
+            window.aiCharacter.stop();
+        }
+
+        document.querySelectorAll('.character-btn').forEach(b => {
+            if (b.getAttribute('data-character') === type) {
+                b.classList.add('active');
+            } else {
+                b.classList.remove('active');
+            }
+        });
+
+        if (type === 'spiderman' && window.SpiderCharacter) {
+            window.aiCharacter = new SpiderCharacter('characterCanvas');
+        } else if (type === 'minion' && window.MinionCharacter) {
+            window.aiCharacter = new MinionCharacter('characterCanvas');
+        } else if (window.AICharacter) {
+            window.aiCharacter = new AICharacter('characterCanvas');
+        }
+
+        localStorage.setItem('active_character', type);
     }
 
     initVoiceBridge() {
@@ -218,6 +243,16 @@ class AppController {
                 btn.classList.add('active');
                 const themeClass = btn.getAttribute('data-theme');
                 this.switchTheme(themeClass);
+            });
+        });
+
+        // Character Switcher Buttons
+        document.querySelectorAll('.character-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const charType = btn.getAttribute('data-character');
+                if (charType) {
+                    this.switchCharacter(charType);
+                }
             });
         });
     }
