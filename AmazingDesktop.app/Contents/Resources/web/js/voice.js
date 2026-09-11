@@ -1,32 +1,44 @@
 /**
- * Amazing Desktop Mac - Voice & Natural Speech Engine
- * Integrates High-Quality Natural Vietnamese Female Voice Stream with Web Audio Visualizer & System Fallback
+ * Amazing Desktop Mac - Voice & Local Neural Speech Synthesis Engine
+ * Connects to Local Neural TTS Server (http://127.0.0.1:8008) for natural Southern Vietnamese female speech (Hoài My Neural)
  */
 
 class VoiceEngine {
     constructor() {
-        this.recognition = null;
         this.synth = window.speechSynthesis;
-        this.isListening = false;
-        this.selectedVoice = null;
-
-        // Natural Voice Audio Player
+        this.selectedVoice = null; // null by default -> priority to Local Neural TTS (Hoài My)
+        this.voices = [];
         this.audioPlayer = new Audio();
-        this.audioPlayer.crossOrigin = "anonymous";
+        this.localTtsUrl = 'http://127.0.0.1:8008';
+        this.currentVoice = 'vi-VN-HoaiMyNeural';
+
+        this.isListening = false;
+        this.recognition = null;
 
         this.onSpeechStartCallback = null;
         this.onSpeechResultCallback = null;
         this.onSpeechEndCallback = null;
         this.onSpeakProgressCallback = null;
 
-        this.initSpeechRecognition();
         this.initVoices();
+        this.initRecognition();
     }
 
-    initSpeechRecognition() {
+    initVoices() {
+        if (!this.synth) return;
+        const loadVoices = () => {
+            this.voices = this.synth.getVoices();
+        };
+        loadVoices();
+        if (this.synth.onvoiceschanged !== undefined) {
+            this.synth.onvoiceschanged = loadVoices;
+        }
+    }
+
+    initRecognition() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
-            console.warn("Speech Recognition API is not supported in this browser environment.");
+            console.warn("Speech Recognition API not supported in this browser.");
             return;
         }
 
@@ -41,19 +53,27 @@ class VoiceEngine {
         };
 
         this.recognition.onresult = (event) => {
-            let transcript = '';
-            for (let i = event.resultIndex; i < event.results.length; i++) {
-                transcript += event.results[i][0].transcript;
+            let interimTranscript = '';
+            let finalTranscript = '';
+
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    finalTranscript += event.results[i][0].transcript;
+                } else {
+                    interimTranscript += event.results[i][0].transcript;
+                }
             }
-            const isFinal = event.results[event.results.length - 1].isFinal;
+
+            const transcript = finalTranscript || interimTranscript;
             if (this.onSpeechResultCallback) {
-                this.onSpeechResultCallback(transcript, isFinal);
+                this.onSpeechResultCallback(transcript, !!finalTranscript);
             }
         };
 
         this.recognition.onerror = (event) => {
-            console.warn("Speech recognition error:", event.error);
-            this.stopListening();
+            console.warn("Speech recognition error", event.error);
+            this.isListening = false;
+            if (this.onSpeechEndCallback) this.onSpeechEndCallback();
         };
 
         this.recognition.onend = () => {
@@ -62,131 +82,208 @@ class VoiceEngine {
         };
     }
 
-    initVoices() {
-        if (!this.synth) return;
-
-        const populateVoices = () => {
-            const voices = this.synth.getVoices();
-            // Prefer Vietnamese female voices (Linh, Hoai, Google vi-VN, etc.)
-            this.selectedVoice = voices.find(v => (v.lang.includes('vi') || v.lang.includes('VI')) && (v.name.toLowerCase().includes('linh') || v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('google'))) ||
-                                 voices.find(v => v.lang.includes('vi') || v.lang.includes('VI')) || 
-                                 voices[0];
-            
-            const voiceSelect = document.getElementById('voiceSelect');
-            if (voiceSelect) {
-                voiceSelect.innerHTML = '';
-                
-                // Add Natural Female Voice option
-                const naturalOption = document.createElement('option');
-                naturalOption.value = 'natural_female';
-                naturalOption.textContent = '🔊 Giọng Nữ Tiếng Việt Tự Nhiên (Khuyên Dùng)';
-                naturalOption.selected = true;
-                voiceSelect.appendChild(naturalOption);
-
-                voices.forEach((v, index) => {
-                    const option = document.createElement('option');
-                    option.value = index;
-                    option.textContent = `${v.name} (${v.lang})`;
-                    voiceSelect.appendChild(option);
-                });
-
-                voiceSelect.onchange = (e) => {
-                    if (e.target.value === 'natural_female') {
-                        this.selectedVoice = null; // Use Natural Cloud Voice
-                    } else {
-                        this.selectedVoice = voices[e.target.value];
-                    }
-                };
-            }
-        };
-
-        populateVoices();
-        if (this.synth.onvoiceschanged !== undefined) {
-            this.synth.onvoiceschanged = populateVoices;
-        }
-    }
-
     startListening() {
         if (!this.recognition) {
-            alert("Trình duyệt không hỗ trợ Web Speech Recognition!");
+            console.warn("Speech recognition not initialized.");
             return;
         }
-
+        if (this.isListening) return;
         try {
             this.recognition.start();
         } catch (e) {
-            console.warn("Recognition already active or error:", e);
+            console.warn("Speech recognition already started:", e);
         }
     }
 
     stopListening() {
-        if (this.recognition && this.isListening) {
+        if (!this.recognition) return;
+        try {
             this.recognition.stop();
-            this.isListening = false;
+        } catch (e) {
+            console.warn(e);
         }
+        this.isListening = false;
+        if (this.onSpeechEndCallback) this.onSpeechEndCallback();
     }
 
-    toggleListening() {
-        if (this.isListening) {
-            this.stopListening();
-        } else {
-            this.startListening();
+    stop() {
+        if (this.audioPlayer) {
+            this.audioPlayer.pause();
+            this.audioPlayer.currentTime = 0;
         }
+        if (this.synth) {
+            this.synth.cancel();
+        }
+        if (this.onSpeakProgressCallback) this.onSpeakProgressCallback(0);
     }
 
-    speak(text, onStart, onEnd) {
-        // Strip markdown, emojis & special symbols for clean TTS reading
-        const cleanedText = text.replace(/[\*\_\#\`\⚙️\✨\💖\🤖\🖼️\🌤️\🕒\🎨\💖\📸]/g, '').trim();
+    splitIntoSentences(text) {
+        const regex = /([^.!?\n]+[.!?\n]*)/g;
+        const matches = text.match(regex);
+        if (!matches) return [text];
+        return matches.map(s => s.trim()).filter(s => s.length > 0);
+    }
+
+    async speak(text, onStart, onEnd) {
+        const cleanedText = text.replace(/[*_#`⚙️✨💖🤖🖼️🌤️🕒🎨📸🐸💎]/g, '').trim();
         if (!cleanedText) {
             if (onEnd) onEnd();
             return;
         }
 
-        // If a specific system voice was chosen from dropdown, use WebSpeechSynthesis
+        this.stop();
+
         if (this.selectedVoice) {
             this.speakWebSpeechFallback(cleanedText, onStart, onEnd);
-        } else {
-            // Otherwise use High-Quality Natural Vietnamese Female Voice Stream
-            this.speakNaturalCloudTTS(cleanedText, onStart, onEnd);
+            return;
+        }
+
+        // Attempt Local Neural TTS (Hoài My Neural) first
+        try {
+            await this.speakLocalNeuralTTS(cleanedText, onStart, onEnd);
+        } catch (e) {
+            console.warn("Local TTS failed, fallback to Google TTS:", e);
+            this.speakGoogleFastTTS(cleanedText, onStart, onEnd);
         }
     }
 
-    speakNaturalCloudTTS(text, onStart, onEnd) {
-        if (this.synth) this.synth.cancel();
-        this.audioPlayer.pause();
-
-        // Encode sentence for TTS URL
-        const encodedText = encodeURIComponent(text);
-        const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=vi&client=tw-ob`;
-
-        this.audioPlayer.src = ttsUrl;
-        let progressInterval = null;
-
-        this.audioPlayer.onplay = () => {
-            if (onStart) onStart();
-            progressInterval = setInterval(() => {
-                const amp = 0.35 + Math.abs(Math.sin(Date.now() * 0.015)) * 0.65;
-                if (this.onSpeakProgressCallback) this.onSpeakProgressCallback(amp);
-            }, 60);
-        };
-
-        this.audioPlayer.onended = () => {
-            if (progressInterval) clearInterval(progressInterval);
-            if (this.onSpeakProgressCallback) this.onSpeakProgressCallback(0);
+    async speakLocalNeuralTTS(text, onStart, onEnd) {
+        const sentences = this.splitIntoSentences(text);
+        if (sentences.length === 0) {
             if (onEnd) onEnd();
+            return;
+        }
+
+        const fetchSentenceBlob = async (sText) => {
+            const res = await fetch(`${this.localTtsUrl}/tts`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: sText, voice: this.currentVoice })
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const blob = await res.blob();
+            return URL.createObjectURL(blob);
         };
 
-        this.audioPlayer.onerror = (err) => {
-            console.warn("Natural TTS stream error, fallback to WebSpeechSynthesis:", err);
-            if (progressInterval) clearInterval(progressInterval);
-            this.speakWebSpeechFallback(text, onStart, onEnd);
+        // Pre-fetch sentence audio concurrently
+        const audioPromises = sentences.map(s => fetchSentenceBlob(s));
+
+        let hasStarted = false;
+
+        for (let i = 0; i < sentences.length; i++) {
+            let audioUrl;
+            try {
+                audioUrl = await audioPromises[i];
+            } catch (err) {
+                console.warn(`Failed Local TTS for sentence ${i}:`, err);
+                continue;
+            }
+
+            await new Promise((resolve) => {
+                this.audioPlayer.src = audioUrl;
+                this.audioPlayer.onplay = () => {
+                    if (!hasStarted) {
+                        hasStarted = true;
+                        if (onStart) onStart();
+                    }
+                    this.simulateAudioProgress();
+                };
+                this.audioPlayer.onended = () => {
+                    URL.revokeObjectURL(audioUrl);
+                    resolve();
+                };
+                this.audioPlayer.onerror = (err) => {
+                    console.warn("Audio playback error:", err);
+                    URL.revokeObjectURL(audioUrl);
+                    resolve();
+                };
+                this.audioPlayer.play().catch(err => {
+                    console.warn("Audio play rejected:", err);
+                    URL.revokeObjectURL(audioUrl);
+                    resolve();
+                });
+            });
+        }
+
+        if (this.onSpeakProgressCallback) this.onSpeakProgressCallback(0);
+        if (onEnd) onEnd();
+    }
+
+    speakGoogleFastTTS(text, onStart, onEnd) {
+        const sentences = this.splitIntoSentences(text);
+        if (sentences.length === 0) {
+            if (onEnd) onEnd();
+            return;
+        }
+
+        const fetchGoogleAudio = async (sentenceText) => {
+            const encodedText = encodeURIComponent(sentenceText);
+            const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=vi&client=tw-ob`;
+            const res = await fetch(ttsUrl);
+            if (!res.ok) throw new Error(`Google TTS status ${res.status}`);
+            const blob = await res.blob();
+            return URL.createObjectURL(blob);
         };
 
-        this.audioPlayer.play().catch(err => {
-            console.warn("Audio play blocked or offline, fallback to WebSpeech:", err);
-            if (progressInterval) clearInterval(progressInterval);
-            this.speakWebSpeechFallback(text, onStart, onEnd);
-        });
+        const audioPromises = sentences.map(s => fetchGoogleAudio(s));
+        let hasStarted = false;
+
+        (async () => {
+            try {
+                for (let i = 0; i < sentences.length; i++) {
+                    let audioUrl;
+                    try {
+                        audioUrl = await audioPromises[i];
+                    } catch (err) {
+                        console.warn(`Failed Google TTS sentence ${i}:`, err);
+                        continue;
+                    }
+
+                    await new Promise((resolve) => {
+                        this.audioPlayer.src = audioUrl;
+                        this.audioPlayer.onplay = () => {
+                            if (!hasStarted) {
+                                hasStarted = true;
+                                if (onStart) onStart();
+                            }
+                            this.simulateAudioProgress();
+                        };
+                        this.audioPlayer.onended = () => {
+                            URL.revokeObjectURL(audioUrl);
+                            resolve();
+                        };
+                        this.audioPlayer.onerror = () => {
+                            URL.revokeObjectURL(audioUrl);
+                            resolve();
+                        };
+                        this.audioPlayer.play().catch(err => {
+                            URL.revokeObjectURL(audioUrl);
+                            resolve();
+                        });
+                    });
+                }
+
+                if (this.onSpeakProgressCallback) this.onSpeakProgressCallback(0);
+                if (onEnd) onEnd();
+            } catch (e) {
+                console.warn("Google TTS fallback failed:", e);
+                this.speakWebSpeechFallback(text, onStart, onEnd);
+            }
+        })();
+    }
+
+    simulateAudioProgress() {
+        const interval = setInterval(() => {
+            if (this.audioPlayer.paused || this.audioPlayer.ended) {
+                clearInterval(interval);
+                if (this.onSpeakProgressCallback) this.onSpeakProgressCallback(0);
+                return;
+            }
+            const amplitude = 0.3 + Math.abs(Math.sin(Date.now() * 0.01)) * 0.7;
+            if (this.onSpeakProgressCallback) {
+                this.onSpeakProgressCallback(amplitude);
+            }
+        }, 80);
     }
 
     speakWebSpeechFallback(text, onStart, onEnd) {
@@ -195,18 +292,17 @@ class VoiceEngine {
             return;
         }
 
-        this.synth.cancel();
-
         const utterance = new SpeechSynthesisUtterance(text);
         if (this.selectedVoice) {
             utterance.voice = this.selectedVoice;
+        } else {
+            utterance.lang = 'vi-VN';
         }
         utterance.rate = 1.0;
-        utterance.pitch = 1.25; // Sweet natural female pitch
+        utterance.pitch = 1.0;
 
         utterance.onstart = () => {
             if (onStart) onStart();
-            this.simulateSpeakingFrequency(onEnd);
         };
 
         utterance.onend = () => {
@@ -214,29 +310,12 @@ class VoiceEngine {
             if (onEnd) onEnd();
         };
 
-        utterance.onerror = (err) => {
-            console.warn("Speech synthesis error:", err);
+        utterance.onerror = () => {
             if (this.onSpeakProgressCallback) this.onSpeakProgressCallback(0);
             if (onEnd) onEnd();
         };
 
         this.synth.speak(utterance);
-    }
-
-    simulateSpeakingFrequency(onComplete) {
-        let currentTick = 0;
-        const interval = setInterval(() => {
-            if (!this.synth.speaking) {
-                clearInterval(interval);
-                if (this.onSpeakProgressCallback) this.onSpeakProgressCallback(0);
-                return;
-            }
-            currentTick++;
-            const amplitude = 0.3 + Math.abs(Math.sin(currentTick * 0.4)) * 0.7;
-            if (this.onSpeakProgressCallback) {
-                this.onSpeakProgressCallback(amplitude);
-            }
-        }, 80);
     }
 }
 
