@@ -1,16 +1,127 @@
-# AmazingDesktop Mac - Interactive AI Web Wallpaper
+# AmazingDesktop Mac - Interactive AI Companion Live Wallpaper 🐸✨
 
-### 1. Lệnh Kill sạch tiến trình đang chạy (Clean Kill):
+**AmazingDesktop Mac** là ứng dụng Hình nền động thông minh (Interactive AI Live Wallpaper & Desktop Pet) dành cho hệ điều hành macOS. Ứng dụng tích hợp nhân vật chú Ếch Origami 3D tương tác sống động, AI Companion kết hợp Gemini API / Offline Engine, và hệ thống Đọc giọng nói Tiếng Việt miền Nam tự nhiên chuẩn Neural (Hoài My Neural) chạy hoàn toàn Local với độ trễ siêu thấp (<100ms).
+
+---
+
+## 📋 Yêu cầu Hệ thống (Prerequisites)
+
+- **Hệ điều hành**: macOS 12.0 (Monterey) trở lên (Tương thích tốt trên Apple Silicon M1/M2/M3/M4 & Intel Mac).
+- **Trình biên dịch**: Xcode Command Line Tools (`swiftc` đã được cài sẵn trên Mac).
+- **Python**: Python 3.8+ (Dùng để chạy máy chủ Local Neural TTS Server).
+
+---
+
+## 🚀 Hướng dẫn Setup & Khởi chạy Chi tiết
+
+### Bước 1: Mở Terminal và di chuyển vào thư mục dự án
 ```bash
-killall -9 AmazingDesktop 2>/dev/null || true
+cd /path/to/amazing-desktop-mac
 ```
 
-### 2. Lệnh Cập nhật Web & Khởi chạy nhanh:
+### Bước 2: Khởi chạy Máy chủ Đọc Giọng nói Local Neural TTS (Hoài My Neural)
+Chạy script khởi tạo môi trường Python virtualenv và chạy máy chủ TTS tại cổng `8008`:
+
+```bash
+./start_tts.sh
+```
+
+> **Lưu ý**: Script `start_tts.sh` sẽ tự động:
+> 1. Tạo môi trường ảo `tts_server/venv` nếu chưa có.
+> 2. Cài đặt các thư viện cần thiết: `edge-tts`, `flask`, `flask-cors`.
+> 3. Lắng nghe tại địa chỉ `http://127.0.0.1:8008`.
+
+Để kiểm tra máy chủ đọc đã hoạt động hay chưa:
+```bash
+curl http://127.0.0.1:8008/health
+# Trả về: {"default_voice":"vi-VN-HoaiMyNeural","service":"AmazingDesktop Local Neural TTS","status":"ok"}
+```
+
+---
+
+### Bước 3: Biên dịch ứng dụng Swift & Đóng gói `.app`
+Ứng dụng sử dụng trình biên dịch `swiftc` để tạo file thực thi native kết nối trực tiếp với Cocoa & WebKit ở mức Desktop Layer.
+
+Chạy lệnh build:
+```bash
+./build.sh
+```
+
+Quá trình này sẽ:
+1. Biên dịch các file mã nguồn Swift trong thư mục `src/` thành file thực thi `AmazingDesktop`.
+2. Tạo cấu trúc ứng dụng macOS standard bundle `AmazingDesktop.app`.
+3. Đồng bộ toàn bộ tài nguyên Web (HTML, CSS, JS, 3D Assets) từ thư mục `web/` vào `AmazingDesktop.app/Contents/Resources/web`.
+4. Tạo `Info.plist` cấp quyền Microphone và cấu hình hiển thị hình nền.
+
+---
+
+### Bước 4: Mở và Trải nghiệm Ứng dụng
+Khởi chạy ứng dụng bằng lệnh:
+```bash
+open AmazingDesktop.app
+```
+
+---
+
+## ⚙️ Hướng dẫn Cấu hình Feature & AI
+
+### 1. Cấu hình Gemini API (Tùy chọn)
+- Mở bảng **⚙️ Cài đặt** trên màn hình ứng dụng.
+- Dán **Gemini API Key** của bạn vào ô nhập liệu và nhấn **Lưu**.
+- Nếu không nhập API Key, ứng dụng sẽ tự động chuyển sang **Offline Intelligent Engine** thông minh, phản hồi ngay lập tức các thắc mắc về sức khỏe, thời gian, thời tiết, tư vấn làm việc và tương tác vui vẻ.
+
+### 2. Tương tác với Nhân vật 3D Origami Frog 🐸
+- Chú ếch Origami 3D WPAP trên màn hình tự động thực hiện các hành động nhảy (jump), quay nhìn theo chuột, chớp mắt và phát sáng theo chủ đề.
+- **Hộp thoại Bong bóng thoại (Speech Bubble)**: Tự động xuất hiện khi AI suy nghĩ/trả lời và tự động đóng ngay lập tức (0ms) khi AI đọc xong.
+
+---
+
+## 🛠️ Lệnh Thao tác Nhanh cho Lập trình viên
+
+### 1. Cập nhật mã nguồn Web mà không cần Biên dịch lại Swift:
+Khi bạn chỉnh sửa mã nguồn trong thư mục `web/` (HTML, CSS, JS):
 ```bash
 killall -9 AmazingDesktop 2>/dev/null || true; rm -rf AmazingDesktop.app/Contents/Resources/web; cp -R web AmazingDesktop.app/Contents/Resources/web; open AmazingDesktop.app
 ```
 
-### 3. Lệnh Biên dịch lại toàn bộ (Swift + Web Bundle):
+### 2. Tắt hoàn toàn ứng dụng (Clean Kill):
+```bash
+killall -9 AmazingDesktop 2>/dev/null || true
+```
+
+### 3. Rebuild toàn bộ dự án từ đầu:
 ```bash
 ./build.sh && open AmazingDesktop.app
 ```
+
+---
+
+## 📁 Cấu trúc Mã nguồn Dự án (Project Architecture)
+
+```
+amazing-desktop-mac/
+├── src/                         # Mã nguồn Swift Native (macOS Desktop Window)
+│   ├── main.swift               # Điểm khởi chạy ứng dụng NSApplication
+│   ├── DesktopWallpaperWindow.swift # Thiết lập Window Level = kCGDesktopWindowLevel - 1
+│   └── WallpaperViewController.swift # Khởi tạo WKWebView tải giao diện local
+├── web/                         # Giao diện Web Live Wallpaper & AI Engine
+│   ├── index.html               # Cấu trúc HTML5
+│   ├── css/style.css            # Thiết kế Glassmorphism & Themes
+│   └── js/
+│       ├── ai.js                # Xử lý Gemini API & Offline AI Fallback
+│       ├── voice.js             # Engine phát âm thanh Local Neural TTS (Hoài My)
+│       ├── slider.js            # Render Thư viện 3D Spatial Wallpaper Slider
+│       └── app.js               # Controller chính kết nối 3D Character & Speech
+├── tts_server/                  # Máy chủ Python Local Neural TTS
+│   ├── server.py                # Flask API endpoint /tts & /health
+│   └── start_tts.sh             # Script tự động kích hoạt virtualenv & server
+├── build.sh                     # Script biên dịch Swift & tạo bundle AmazingDesktop.app
+└── README.md                    # File hướng dẫn setup dự án đầy đủ
+```
+
+---
+
+## 🔊 Giọng đọc Local Neural TTS
+
+- **Giọng đọc mặc định**: `vi-VN-HoaiMyNeural` (Giọng nữ Miền Nam tự nhiên, truyền cảm, phát âm chính xác các từ ngữ "một chút nha", "nghỉ ngơi nhé",...).
+- **Cơ chế tải song song (Parallel Pre-fetching)**: Giúp câu thoại đầu tiên cất lên chỉ sau **<100ms** khi AI vừa tạo xong văn bản, các câu tiếp theo được tải ngầm liên tục không bị ngắt quãng hay giật lag.
