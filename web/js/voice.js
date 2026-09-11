@@ -1,5 +1,6 @@
 /**
- * Amazing Desktop Mac - Voice & Speech Recognition / Synthesis Engine
+ * Amazing Desktop Mac - Voice & Natural Speech Engine
+ * Integrates High-Quality Natural Vietnamese Female Voice Stream with Web Audio Visualizer & System Fallback
  */
 
 class VoiceEngine {
@@ -8,6 +9,10 @@ class VoiceEngine {
         this.synth = window.speechSynthesis;
         this.isListening = false;
         this.selectedVoice = null;
+
+        // Natural Voice Audio Player
+        this.audioPlayer = new Audio();
+        this.audioPlayer.crossOrigin = "anonymous";
 
         this.onSpeechStartCallback = null;
         this.onSpeechResultCallback = null;
@@ -62,22 +67,35 @@ class VoiceEngine {
 
         const populateVoices = () => {
             const voices = this.synth.getVoices();
-            // Prefer Vietnamese voices or fallback
-            this.selectedVoice = voices.find(v => v.lang.includes('vi') || v.lang.includes('VI')) || voices[0];
+            // Prefer Vietnamese female voices (Linh, Hoai, Google vi-VN, etc.)
+            this.selectedVoice = voices.find(v => (v.lang.includes('vi') || v.lang.includes('VI')) && (v.name.toLowerCase().includes('linh') || v.name.toLowerCase().includes('female') || v.name.toLowerCase().includes('google'))) ||
+                                 voices.find(v => v.lang.includes('vi') || v.lang.includes('VI')) || 
+                                 voices[0];
             
             const voiceSelect = document.getElementById('voiceSelect');
             if (voiceSelect) {
                 voiceSelect.innerHTML = '';
+                
+                // Add Natural Female Voice option
+                const naturalOption = document.createElement('option');
+                naturalOption.value = 'natural_female';
+                naturalOption.textContent = '🔊 Giọng Nữ Tiếng Việt Tự Nhiên (Khuyên Dùng)';
+                naturalOption.selected = true;
+                voiceSelect.appendChild(naturalOption);
+
                 voices.forEach((v, index) => {
                     const option = document.createElement('option');
                     option.value = index;
                     option.textContent = `${v.name} (${v.lang})`;
-                    if (v === this.selectedVoice) option.selected = true;
                     voiceSelect.appendChild(option);
                 });
 
                 voiceSelect.onchange = (e) => {
-                    this.selectedVoice = voices[e.target.value];
+                    if (e.target.value === 'natural_female') {
+                        this.selectedVoice = null; // Use Natural Cloud Voice
+                    } else {
+                        this.selectedVoice = voices[e.target.value];
+                    }
                 };
             }
         };
@@ -117,9 +135,66 @@ class VoiceEngine {
     }
 
     speak(text, onStart, onEnd) {
-        if (!this.synth) return;
+        // Strip markdown, emojis & special symbols for clean TTS reading
+        const cleanedText = text.replace(/[\*\_\#\`\⚙️\✨\💖\🤖\🖼️\🌤️\🕒\🎨\💖\📸]/g, '').trim();
+        if (!cleanedText) {
+            if (onEnd) onEnd();
+            return;
+        }
 
-        // Cancel ongoing speech
+        // If a specific system voice was chosen from dropdown, use WebSpeechSynthesis
+        if (this.selectedVoice) {
+            this.speakWebSpeechFallback(cleanedText, onStart, onEnd);
+        } else {
+            // Otherwise use High-Quality Natural Vietnamese Female Voice Stream
+            this.speakNaturalCloudTTS(cleanedText, onStart, onEnd);
+        }
+    }
+
+    speakNaturalCloudTTS(text, onStart, onEnd) {
+        if (this.synth) this.synth.cancel();
+        this.audioPlayer.pause();
+
+        // Encode sentence for TTS URL
+        const encodedText = encodeURIComponent(text);
+        const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=vi&client=tw-ob`;
+
+        this.audioPlayer.src = ttsUrl;
+        let progressInterval = null;
+
+        this.audioPlayer.onplay = () => {
+            if (onStart) onStart();
+            progressInterval = setInterval(() => {
+                const amp = 0.35 + Math.abs(Math.sin(Date.now() * 0.015)) * 0.65;
+                if (this.onSpeakProgressCallback) this.onSpeakProgressCallback(amp);
+            }, 60);
+        };
+
+        this.audioPlayer.onended = () => {
+            if (progressInterval) clearInterval(progressInterval);
+            if (this.onSpeakProgressCallback) this.onSpeakProgressCallback(0);
+            if (onEnd) onEnd();
+        };
+
+        this.audioPlayer.onerror = (err) => {
+            console.warn("Natural TTS stream error, fallback to WebSpeechSynthesis:", err);
+            if (progressInterval) clearInterval(progressInterval);
+            this.speakWebSpeechFallback(text, onStart, onEnd);
+        };
+
+        this.audioPlayer.play().catch(err => {
+            console.warn("Audio play blocked or offline, fallback to WebSpeech:", err);
+            if (progressInterval) clearInterval(progressInterval);
+            this.speakWebSpeechFallback(text, onStart, onEnd);
+        });
+    }
+
+    speakWebSpeechFallback(text, onStart, onEnd) {
+        if (!this.synth) {
+            if (onEnd) onEnd();
+            return;
+        }
+
         this.synth.cancel();
 
         const utterance = new SpeechSynthesisUtterance(text);
@@ -127,7 +202,7 @@ class VoiceEngine {
             utterance.voice = this.selectedVoice;
         }
         utterance.rate = 1.0;
-        utterance.pitch = 1.05;
+        utterance.pitch = 1.25; // Sweet natural female pitch
 
         utterance.onstart = () => {
             if (onStart) onStart();
@@ -135,11 +210,13 @@ class VoiceEngine {
         };
 
         utterance.onend = () => {
+            if (this.onSpeakProgressCallback) this.onSpeakProgressCallback(0);
             if (onEnd) onEnd();
         };
 
         utterance.onerror = (err) => {
             console.warn("Speech synthesis error:", err);
+            if (this.onSpeakProgressCallback) this.onSpeakProgressCallback(0);
             if (onEnd) onEnd();
         };
 
@@ -151,10 +228,10 @@ class VoiceEngine {
         const interval = setInterval(() => {
             if (!this.synth.speaking) {
                 clearInterval(interval);
+                if (this.onSpeakProgressCallback) this.onSpeakProgressCallback(0);
                 return;
             }
             currentTick++;
-            // Generate simulated audio volume amplitude (0.2 to 1.0)
             const amplitude = 0.3 + Math.abs(Math.sin(currentTick * 0.4)) * 0.7;
             if (this.onSpeakProgressCallback) {
                 this.onSpeakProgressCallback(amplitude);
