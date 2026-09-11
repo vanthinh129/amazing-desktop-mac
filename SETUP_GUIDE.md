@@ -48,7 +48,20 @@ open AmazingDesktop.app
 
 ---
 
-## ⚡ 3. Các câu lệnh hữu ích khi Phát triển (Cheat Sheet)
+## 🖼️ 3. Hướng dẫn Thêm Hình Ảnh vào Bộ Sưu Tập 3D Spatial Slider
+
+Ứng dụng hỗ trợ tự động quét và nạp ảnh cá nhân của bạn vào bộ sưu tập **3D Spatial Carousel**:
+
+1. **Vị trí thả ảnh**:
+   - Thả file hình ảnh của bạn vào thư mục `images/` (ở gốc dự án) hoặc `web/images/`.
+   - Các định dạng được hỗ trợ: `.jpg`, `.jpeg`, `.png`, `.webp`, `.gif`, `.svg`, `.bmp`.
+
+2. **Cơ chế Tự động nạp**:
+   - Ứng dụng Swift Native (`WallpaperViewController.swift`) sẽ tự động quét thư mục `images/`, đồng bộ vào bộ sưu tập web, xáo trộn ngẫu nhiên (shuffle) và nạp mượt mà vào Slide 3D khi ứng dụng khởi chạy.
+
+---
+
+## ⚡ 4. Các câu lệnh hữu ích khi Phát triển (Cheat Sheet)
 
 - **Biên dịch & Chạy lại ứng dụng**:
   ```bash
@@ -67,7 +80,7 @@ open AmazingDesktop.app
 
 ---
 
-## 🔊 4. Thông tin Giọng nói & Sci-Fi AI Avatar
+## 🔊 5. Thông tin Giọng nói & Sci-Fi AI Avatar
 
 - **Sci-Fi Holographic AI Avatar**: Nhân vật AI dạng quả cầu Hologram phát sáng với các vòng năng lượng Spectrum, các hạt Orbit xoay xung quanh và đôi mắt kỹ thuật số sinh động tương tác theo trạng thái (IDLE, LISTENING, THINKING, SPEAKING).
 - **Giọng đọc mặc định**: `vi-VN-HoaiMyNeural` (Giọng nữ Miền Nam tự nhiên, đọc đúng chuẩn ngữ điệu Tiếng Việt).

@@ -65,6 +65,20 @@ open AmazingDesktop.app
 
 ---
 
+## 🖼️ Hướng dẫn Thêm Hình Ảnh vào Bộ Sưu Tập 3D Spatial Slider
+
+Ứng dụng hỗ trợ tự động quét và nạp ảnh cá nhân của bạn vào bộ sưu tập **3D Spatial Carousel**:
+
+1. **Vị trí thả ảnh**:
+   - Copy/Thả các file hình ảnh của bạn vào thư mục `images/` (ở thư mục gốc dự án) hoặc thư mục `web/images/`.
+   - Các định dạng được hỗ trợ: `.jpg`, `.jpeg`, `.png`, `.webp`, `.gif`, `.svg`, `.bmp`.
+
+2. **Cơ chế Tự động hóa**:
+   - Ứng dụng Swift Native (`WallpaperViewController.swift`) sẽ tự động quét thư mục `images/`, đồng bộ vào bộ sưu tập web, xáo trộn ngẫu nhiên (shuffle) và nạp mượt mà vào Slide 3D khi ứng dụng khởi chạy.
+   - Thẻ hình ảnh 3D tự động xoay chuyển theo vòng lặp 3 giây và đưa bức ảnh tiêu điểm ra trước mặt.
+
+---
+
 ## ⚙️ Hướng dẫn Cấu hình Feature & AI
 
 ### 1. Cấu hình Gemini API (Tùy chọn)
@@ -109,10 +123,11 @@ amazing-desktop-mac/
 ├── src/                         # Mã nguồn Swift Native (macOS Desktop Window)
 │   ├── main.swift               # Điểm khởi chạy ứng dụng NSApplication
 │   ├── DesktopWallpaperWindow.swift # Thiết lập Window Level = kCGDesktopWindowLevel - 1
-│   └── WallpaperViewController.swift # Khởi tạo WKWebView tải giao diện local
+│   └── WallpaperViewController.swift # Khởi tạo WKWebView & tự động quét/nạp folder images/
 ├── web/                         # Giao diện Web Live Wallpaper & AI Engine
 │   ├── index.html               # Cấu trúc HTML5
 │   ├── css/style.css            # Thiết kế Glassmorphism & Themes
+│   ├── images/                  # Thư mục lưu trữ hình ảnh cho Slider 3D
 │   └── js/
 │       ├── ai.js                # Xử lý Gemini API & Offline AI Fallback
 │       ├── voice.js             # Engine phát âm thanh Local Neural TTS (Hoài My)
@@ -122,6 +137,7 @@ amazing-desktop-mac/
 ├── tts_server/                  # Máy chủ Python Local Neural TTS
 │   ├── server.py                # Flask API endpoint /tts & /health
 │   └── start_tts.sh             # Script tự động kích hoạt virtualenv & server
+├── images/                      # Thư mục gốc để người dùng thả ảnh tự do
 ├── build.sh                     # Script biên dịch Swift & tạo bundle AmazingDesktop.app
 ├── SETUP_GUIDE.md               # Hướng dẫn setup nhanh
 └── README.md                    # File hướng dẫn đầy đủ dự án
