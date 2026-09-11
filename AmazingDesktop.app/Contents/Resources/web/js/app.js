@@ -253,11 +253,20 @@ class AppController {
         if (statusText) statusText.textContent = "AI Thinking... • Đang suy nghĩ";
         if (window.aiCharacter) window.aiCharacter.setState('THINKING');
 
+        // Show Thinking Speech Bubble while waiting for AI API response
+        const thinkingTimer = setTimeout(() => {
+            if (window.aiCharacter && window.aiCharacter.state === 'THINKING') {
+                this.showSpeechBubble("AI Companion", "Đang suy nghĩ câu trả lời... 🤔", true);
+            }
+        }, 1200);
+
         // Generate response from AI Engine
         let responseText = "Tôi đã nghe được bạn nói.";
         if (window.aiEngine) {
             responseText = await window.aiEngine.generateResponse(queryText);
         }
+
+        clearTimeout(thinkingTimer);
 
         if (statusText) statusText.textContent = "AI Speaking... • Đang nói";
         if (window.aiCharacter) window.aiCharacter.setState('SPEAKING');
@@ -272,12 +281,17 @@ class AppController {
                 () => {
                     if (window.aiCharacter) window.aiCharacter.setState('IDLE');
                     if (statusText) statusText.textContent = "AI Ready • Sẵn sàng";
+                    // Hide speech bubble IMMEDIATELY (0ms delay) as soon as reading finishes
+                    this.hideSpeechBubbleAfterDelay(0);
                 }
             );
+        } else {
+            const wordCount = responseText.split(/\s+/).length;
+            this.hideSpeechBubbleAfterDelay(Math.max(6000, wordCount * 300));
         }
     }
 
-    showSpeechBubble(tag, text) {
+    showSpeechBubble(tag, text, isThinking = false) {
         const bubble = document.getElementById('speechBubble');
         const bubbleTag = document.getElementById('bubbleTag');
         const bubbleText = document.getElementById('bubbleText');
@@ -289,9 +303,40 @@ class AppController {
         bubble.classList.add('active');
 
         if (this.speechBubbleTimeout) clearTimeout(this.speechBubbleTimeout);
+
+        if (isThinking) {
+            // Keep visible continuously while thinking
+            return;
+        }
+
+        // Safety fallback duration in case TTS is disabled or blocked
+        const wordCount = text.split(/\s+/).length;
+        const fallbackDuration = Math.max(10000, wordCount * 400);
+
         this.speechBubbleTimeout = setTimeout(() => {
+            if (window.aiCharacter && (window.aiCharacter.state === 'SPEAKING' || window.aiCharacter.state === 'THINKING')) {
+                return;
+            }
             bubble.classList.remove('active');
-        }, 12000);
+        }, fallbackDuration);
+    }
+
+    hideSpeechBubbleAfterDelay(ms = 0) {
+        const bubble = document.getElementById('speechBubble');
+        if (!bubble) return;
+
+        if (this.speechBubbleTimeout) clearTimeout(this.speechBubbleTimeout);
+
+        if (ms === 0) {
+            bubble.classList.remove('active');
+        } else {
+            this.speechBubbleTimeout = setTimeout(() => {
+                if (window.aiCharacter && (window.aiCharacter.state === 'SPEAKING' || window.aiCharacter.state === 'THINKING')) {
+                    return;
+                }
+                bubble.classList.remove('active');
+            }, ms);
+        }
     }
 
     initNativeBridge() {

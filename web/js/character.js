@@ -154,12 +154,12 @@ class AICharacter {
         const radius = 80 + (this.state === 'SPEAKING' ? this.audioAmplitude * 10 : 0);
 
         ctx.save();
-        // Radial Gradient for Holographic Orb Body
-        const gradient = ctx.createRadialGradient(cx - 25, cy - 25, 10, cx, cy, radius);
+        // Symmetrical Radial Gradient for Holographic Orb Body (no off-center eye glare)
+        const gradient = ctx.createRadialGradient(cx, cy - 30, 5, cx, cy, radius);
         gradient.addColorStop(0, '#ffffff');
-        gradient.addColorStop(0.3, this.primaryColor);
+        gradient.addColorStop(0.25, this.primaryColor);
         gradient.addColorStop(0.7, this.secondaryColor);
-        gradient.addColorStop(1, 'rgba(7, 9, 19, 0.9)');
+        gradient.addColorStop(1, 'rgba(7, 9, 19, 0.95)');
 
         ctx.beginPath();
         ctx.arc(cx, cy, radius, 0, Math.PI * 2);
@@ -205,7 +205,26 @@ class AICharacter {
             ctx.fillRect(cx - eyeOffset - 12, eyeY, 24, 3);
             ctx.fillRect(cx + eyeOffset - 12, eyeY, 24, 3);
         } else {
-            if (this.state === 'LISTENING') {
+            if (this.state === 'THINKING') {
+                // Thoughtful Eyes (Looking up-right with thinking eyebrows)
+                const thinkLookX = Math.sin(this.time * 4) * 2 + 3;
+                const thinkLookY = -4;
+
+                ctx.beginPath();
+                ctx.arc(cx - eyeOffset + thinkLookX, eyeY + thinkLookY, 9, 0, Math.PI * 2);
+                ctx.arc(cx + eyeOffset + thinkLookX, eyeY + thinkLookY, 9, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Thoughtful Eyebrows
+                ctx.lineWidth = 2.5;
+                ctx.strokeStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.moveTo(cx - eyeOffset - 10, eyeY - 14);
+                ctx.lineTo(cx - eyeOffset + 8, eyeY - 18);
+                ctx.moveTo(cx + eyeOffset - 8, eyeY - 18);
+                ctx.lineTo(cx + eyeOffset + 10, eyeY - 14);
+                ctx.stroke();
+            } else if (this.state === 'LISTENING') {
                 // Wide attentive glowing eyes
                 ctx.beginPath();
                 ctx.arc(cx - eyeOffset, eyeY, 11, 0, Math.PI * 2);
@@ -231,7 +250,13 @@ class AICharacter {
         // Draw Mouth
         const mouthY = cy + 22;
         ctx.beginPath();
-        if (this.state === 'SPEAKING') {
+        if (this.state === 'THINKING') {
+            // Curious "o" mouth
+            const oSize = 4.5 + Math.sin(this.time * 5) * 1.5;
+            ctx.arc(cx + 3, mouthY, oSize, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+        } else if (this.state === 'SPEAKING') {
             const mouthHeight = 4 + this.audioAmplitude * 18;
             ctx.ellipse(cx, mouthY, 10, mouthHeight, 0, 0, Math.PI * 2);
             ctx.fillStyle = '#ffffff';
