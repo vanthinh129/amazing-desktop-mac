@@ -1,6 +1,6 @@
-# Hướng dẫn Setup & Khởi chạy Chi tiết Dự án AmazingDesktop Mac 🐸✨
+# Hướng dẫn Setup & Khởi chạy Chi tiết Dự án AmazingDesktop Mac 🤖✨
 
-Tài liệu này hướng dẫn chi tiết từ A - Z cách cài đặt, cấu hình, biên dịch và khởi chạy dự án **AmazingDesktop Mac** (Ứng dụng Hình nền động AI & Pet 3D trên macOS).
+Tài liệu này hướng dẫn chi tiết từ A - Z cách cài đặt, cấu hình, biên dịch và khởi chạy dự án **AmazingDesktop Mac** (Ứng dụng Hình nền động Sci-Fi AI Live Wallpaper & Holographic Avatar trên macOS).
 
 ---
 
@@ -67,8 +67,9 @@ open AmazingDesktop.app
 
 ---
 
-## 🔊 4. Thông tin Giọng nói & AI Engine
+## 🔊 4. Thông tin Giọng nói & Sci-Fi AI Avatar
 
-- **Giọng đọc mặc định**: `vi-VN-HoaiMyNeural` (Giọng nữ Miền Nam tự nhiên, đọc đúng chuẩn ngữ điệu Tiếng Việt, loại bỏ hoàn toàn hiện tượng đọc sai từ như "mộ hú nha").
-- **Tốc độ phản hồi**: Nhờ kỹ thuật tách câu và phát audio song song, giọng nói cất lên lập tức (<100ms) sau khi AI trả lời xong.
+- **Sci-Fi Holographic AI Avatar**: Nhân vật AI dạng quả cầu Hologram phát sáng với các vòng năng lượng Spectrum, các hạt Orbit xoay xung quanh và đôi mắt kỹ thuật số sinh động tương tác theo trạng thái (IDLE, LISTENING, THINKING, SPEAKING).
+- **Giọng đọc mặc định**: `vi-VN-HoaiMyNeural` (Giọng nữ Miền Nam tự nhiên, đọc đúng chuẩn ngữ điệu Tiếng Việt).
+- **Tốc độ phản hồi**: Nhờ kỹ thuật tách câu và phát audio song song, giọng nói cất lên lập tức (<100ms) sau khi AI vừa tạo xong văn bản.
 - **Speech Bubble**: Bong bóng thoại của nhân vật tự động đóng ngay lập tức (0ms) khi giọng đọc kết thúc.

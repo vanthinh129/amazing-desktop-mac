@@ -1,12 +1,14 @@
-# AmazingDesktop Mac - Interactive AI Companion Live Wallpaper 🐸✨
+# AmazingDesktop Mac - Interactive Sci-Fi AI Companion Live Wallpaper 🤖✨
 
-**AmazingDesktop Mac** là ứng dụng Hình nền động thông minh (Interactive AI Live Wallpaper & Desktop Pet) dành cho hệ điều hành macOS. Ứng dụng tích hợp nhân vật chú Ếch Origami 3D tương tác sống động, AI Companion kết hợp Gemini API / Offline Engine, và hệ thống Đọc giọng nói Tiếng Việt miền Nam tự nhiên chuẩn Neural (Hoài My Neural) chạy hoàn toàn Local với độ trễ siêu thấp (<100ms).
+**AmazingDesktop Mac** là ứng dụng Hình nền động thông minh (Interactive Sci-Fi AI Live Wallpaper & Desktop Assistant) dành cho hệ điều hành macOS. 
+
+Ứng dụng tích hợp nhân vật **Sci-Fi Holographic AI Avatar** tương tác sống động (biểu cảm mắt kỹ thuật số, hiệu ứng hạt Orbit Particles & vòng năng lượng Spectrum), bộ sưu tập **3D Spatial Wallpaper Slider**, **AI Companion** (Gemini API + Offline Smart Engine), và hệ thống **Đọc giọng nói Tiếng Việt miền Nam tự nhiên** (Hoài My Neural) chạy hoàn toàn Local với độ trễ siêu thấp (<100ms).
 
 ---
 
 ## 📋 Yêu cầu Hệ thống (Prerequisites)
 
-- **Hệ điều hành**: macOS 12.0 (Monterey) trở lên (Tương thích tốt trên Apple Silicon M1/M2/M3/M4 & Intel Mac).
+- **Hệ điều hành**: macOS 12.0 (Monterey) trở lên (Tương thích hoàn hảo trên Apple Silicon M1/M2/M3/M4 & Intel Mac).
 - **Trình biên dịch**: Xcode Command Line Tools (`swiftc` đã được cài sẵn trên Mac).
 - **Python**: Python 3.8+ (Dùng để chạy máy chủ Local Neural TTS Server).
 
@@ -50,7 +52,7 @@ Chạy lệnh build:
 Quá trình này sẽ:
 1. Biên dịch các file mã nguồn Swift trong thư mục `src/` thành file thực thi `AmazingDesktop`.
 2. Tạo cấu trúc ứng dụng macOS standard bundle `AmazingDesktop.app`.
-3. Đồng bộ toàn bộ tài nguyên Web (HTML, CSS, JS, 3D Assets) từ thư mục `web/` vào `AmazingDesktop.app/Contents/Resources/web`.
+3. Đồng bộ toàn bộ tài nguyên Web (HTML, CSS, JS, Assets) từ thư mục `web/` vào `AmazingDesktop.app/Contents/Resources/web`.
 4. Tạo `Info.plist` cấp quyền Microphone và cấu hình hiển thị hình nền.
 
 ---
@@ -70,8 +72,12 @@ open AmazingDesktop.app
 - Dán **Gemini API Key** của bạn vào ô nhập liệu và nhấn **Lưu**.
 - Nếu không nhập API Key, ứng dụng sẽ tự động chuyển sang **Offline Intelligent Engine** thông minh, phản hồi ngay lập tức các thắc mắc về sức khỏe, thời gian, thời tiết, tư vấn làm việc và tương tác vui vẻ.
 
-### 2. Tương tác với Nhân vật 3D Origami Frog 🐸
-- Chú ếch Origami 3D WPAP trên màn hình tự động thực hiện các hành động nhảy (jump), quay nhìn theo chuột, chớp mắt và phát sáng theo chủ đề.
+### 2. Tương tác với Nhân vật Sci-Fi Holographic AI Avatar 🤖
+- Nhân vật Hologram AI trên màn hình tự động thực hiện các hiệu ứng chuyển trạng thái linh hoạt:
+  - **IDLE**: Nhấp nháy mắt, bay bồng bềnh, các vòng Halo xoay nhẹ.
+  - **LISTENING**: Mắt ghen phát sáng rộng, vòng âm thanh mở rộng.
+  - **THINKING**: Mắt hướng lên suy nghĩ, miệng hình chữ "o" tò mò, các hạt Orbit xoay nhanh.
+  - **SPEAKING**: Mắt hình nụ cười, miệng phát nhịp theo tần số âm thanh thực tế.
 - **Hộp thoại Bong bóng thoại (Speech Bubble)**: Tự động xuất hiện khi AI suy nghĩ/trả lời và tự động đóng ngay lập tức (0ms) khi AI đọc xong.
 
 ---
@@ -110,13 +116,15 @@ amazing-desktop-mac/
 │   └── js/
 │       ├── ai.js                # Xử lý Gemini API & Offline AI Fallback
 │       ├── voice.js             # Engine phát âm thanh Local Neural TTS (Hoài My)
-│       ├── slider.js            # Render Thư viện 3D Spatial Wallpaper Slider
-│       └── app.js               # Controller chính kết nối 3D Character & Speech
+│       ├── character.js         # Canvas Sci-Fi Holographic AI Avatar & Visualizer
+│       ├── slider.js            # Render Thư viện 3D Spatial Wallpaper Gallery Slider
+│       └── app.js               # Controller chính kết nối AI & UI
 ├── tts_server/                  # Máy chủ Python Local Neural TTS
 │   ├── server.py                # Flask API endpoint /tts & /health
 │   └── start_tts.sh             # Script tự động kích hoạt virtualenv & server
 ├── build.sh                     # Script biên dịch Swift & tạo bundle AmazingDesktop.app
-└── README.md                    # File hướng dẫn setup dự án đầy đủ
+├── SETUP_GUIDE.md               # Hướng dẫn setup nhanh
+└── README.md                    # File hướng dẫn đầy đủ dự án
 ```
 
 ---
