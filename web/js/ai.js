@@ -31,7 +31,8 @@ class AIEngine {
             try {
                 return await this.callGeminiAPI(cleanedPrompt);
             } catch (err) {
-                console.warn("Gemini API Error, falling back to offline engine:", err);
+                console.warn("Gemini API Error:", err);
+                return `Kết nối Gemini API thất bại (${err.message || 'Lỗi API Key'}). Vui lòng kiểm tra lại Key trong ⚙️ Cài đặt!`;
             }
         }
 
@@ -69,7 +70,7 @@ class AIEngine {
     async callGeminiAPI(prompt) {
         const systemInstruction = "Bạn là AI Companion thân thiện, tinh tế và quan tâm trên hình nền máy tính macOS của người dùng. Hãy trả lời trực tiếp, ân cần và hữu ích bằng tiếng Việt tự nhiên (tối đa 2-3 câu). Khi người dùng chia sẻ về sức khỏe, cảm xúc hay thắc mắc, hãy lắng nghe và đưa ra lời khuyên thiết thực.";
         
-        const models = ['gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-1.5-pro'];
+        const models = ['gemini-flash-latest', 'gemini-3.6-flash', 'gemini-flash-lite-latest', 'gemini-pro-latest', 'gemini-2.5-flash-lite', 'gemini-1.5-flash'];
         let lastError = null;
 
         for (const model of models) {
@@ -92,13 +93,17 @@ class AIEngine {
                     const data = await response.json();
                     const replyText = data.candidates?.[0]?.content?.parts?.[0]?.text;
                     if (replyText) return replyText;
+                } else {
+                    const errData = await response.json().catch(() => ({}));
+                    const errMsg = errData.error?.message || `Lỗi HTTP ${response.status}`;
+                    lastError = new Error(`${errMsg}`);
                 }
             } catch (err) {
                 lastError = err;
             }
         }
         
-        throw lastError || new Error("Failed to contact Gemini API");
+        throw lastError || new Error("Không thể kết nối máy chủ Gemini");
     }
 
     generateOfflineResponse(prompt) {
@@ -124,7 +129,7 @@ class AIEngine {
 
         // 2. Advice & Asking What To Do ("làm sao", "phải làm gì")
         if (lower.includes('làm sao') || lower.includes('phải làm gì') || lower.includes('nên làm gì')) {
-            return `Nếu bạn gặp vấn đề sức khỏe hoặc công việc, hãy tạm dừng lại nghỉ ngơi một chút, lắng nghe cơ thể mình và giải quyết từng bước một nhé! (Gợi ý: Nhập Gemini API Key trong ⚙️ Cài đặt để tôi hỗ trợ tư vấn chi tiết hơn).`;
+            return `Nếu bạn gặp vấn đề sức khỏe hoặc công việc, hãy tạm dừng lại nghỉ ngơi một chút, lắng nghe cơ thể mình và giải quyết từng bước một nhé!`;
         }
 
         // 3. Weather queries (Check weather before date because "thời tiết hôm nay" contains "hôm nay")
