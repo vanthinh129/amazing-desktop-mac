@@ -113,11 +113,15 @@ html, body {
     justify-content: space-between;
     align-items: center;
     width: 100%;
+    position: relative;
+    z-index: 9999;
+    pointer-events: auto;
 }
 
 .clock-widget {
     padding: 0.9rem 1.8rem;
     border-radius: var(--radius-lg);
+    pointer-events: auto;
 }
 
 .time-display {
@@ -150,6 +154,9 @@ html, body {
     gap: 1rem;
     padding: 0.75rem 1.25rem;
     border-radius: var(--radius-full);
+    position: relative;
+    z-index: 9999;
+    pointer-events: auto;
 }
 
 .status-indicator {
@@ -179,22 +186,27 @@ html, body {
 }
 
 .settings-toggle-btn {
-    background: transparent;
-    border: none;
-    color: var(--text-muted);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--text-main);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0.4rem;
+    padding: 0.5rem;
     border-radius: 50%;
     transition: all 0.2s ease;
+    position: relative;
+    z-index: 10000;
+    pointer-events: auto;
 }
 
 .settings-toggle-btn:hover {
     color: var(--primary-color);
-    background: rgba(255, 255, 255, 0.08);
+    border-color: var(--primary-color);
+    background: rgba(255, 255, 255, 0.2);
     transform: rotate(45deg);
+    box-shadow: 0 0 15px var(--primary-glow);
 }
 
 /* Center Character Stage */
@@ -418,7 +430,7 @@ html, body {
     transform: translate(-50%, -50%) scale(0.9);
     width: 90%;
     max-width: 480px;
-    z-index: 100;
+    z-index: 20000;
     opacity: 0;
     pointer-events: none;
     transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);

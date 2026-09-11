@@ -111,9 +111,15 @@ class AppController {
         if (window.aiCharacter && typeof window.aiCharacter.stop === 'function') {
             window.aiCharacter.stop();
         }
+        window.aiCharacter = null;
 
         const avatarWrapper = document.getElementById('avatarWrapper');
         const canvas = document.getElementById('characterCanvas');
+
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
 
         document.querySelectorAll('.character-btn').forEach(b => {
             if (b.getAttribute('data-character') === type) {
@@ -123,19 +129,22 @@ class AppController {
             }
         });
 
-        if (type === 'spiderman' && window.SpiderCharacter) {
+        if (type === 'spiderman' && (window.SpiderCharacter || typeof SpiderCharacter !== 'undefined')) {
             if (avatarWrapper) avatarWrapper.classList.add('fullscreen-mode');
-            window.aiCharacter = new SpiderCharacter('characterCanvas');
+            const SpideyCls = window.SpiderCharacter || SpiderCharacter;
+            window.aiCharacter = new SpideyCls('characterCanvas');
         } else {
             if (avatarWrapper) avatarWrapper.classList.remove('fullscreen-mode');
             if (canvas) {
-                canvas.width = 450;
-                canvas.height = 450;
+                canvas.width = (type === 'minion') ? 650 : 450;
+                canvas.height = (type === 'minion') ? 420 : 450;
             }
-            if (type === 'minion' && window.MinionCharacter) {
-                window.aiCharacter = new MinionCharacter('characterCanvas');
-            } else if (window.AICharacter) {
-                window.aiCharacter = new AICharacter('characterCanvas');
+            if (type === 'minion' && (window.MinionCharacter || typeof MinionCharacter !== 'undefined')) {
+                const MinionCls = window.MinionCharacter || MinionCharacter;
+                window.aiCharacter = new MinionCls('characterCanvas');
+            } else {
+                const AICls = window.AICharacter || AICharacter;
+                window.aiCharacter = new AICls('characterCanvas');
             }
         }
 

@@ -8,8 +8,8 @@ class AICharacter {
         if (!this.canvas) return;
 
         this.ctx = this.canvas.getContext('2d');
-        this.width = this.canvas.width;
-        this.height = this.canvas.height;
+        this.width = this.canvas.width = 450;
+        this.height = this.canvas.height = 450;
         this.centerX = this.width / 2;
         this.centerY = this.height / 2;
 
@@ -30,7 +30,13 @@ class AICharacter {
         this.initParticles(35);
 
         this.animate = this.animate.bind(this);
-        requestAnimationFrame(this.animate);
+        this.animFrameId = requestAnimationFrame(this.animate);
+    }
+
+    stop() {
+        if (this.animFrameId) {
+            cancelAnimationFrame(this.animFrameId);
+        }
     }
 
     setThemeColors(primary, secondary) {
@@ -97,7 +103,7 @@ class AICharacter {
         // Draw AI Facial Features (Digital Eyes & Mouth Expression)
         this.drawFaceFeatures(this.centerX, renderY);
 
-        requestAnimationFrame(this.animate);
+        this.animFrameId = requestAnimationFrame(this.animate);
     }
 
     drawOuterSpectrumRings(cx, cy) {
@@ -278,4 +284,5 @@ class AICharacter {
     }
 }
 
+window.AICharacter = AICharacter;
 window.aiCharacter = null;
