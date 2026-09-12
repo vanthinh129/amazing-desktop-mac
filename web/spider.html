@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chibi Spider-Man Precise Vector Canvas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background: #0f172a;
+            color: #f8fafc;
+            touch-action: manipulation;
+        }
+
+        canvas {
+            filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.6));
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col items-center justify-between p-3 sm:p-6 select-none">
+
+    <!-- Header Section -->
+    <header class="text-center my-2">
+        <h1
+            class="text-3xl sm:text-5xl font-extrabold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-rose-500 to-blue-500 drop-shadow-md">
+            CHIBI SPIDER-MAN
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-400 mt-1">Vẽ Canvas vector chính xác theo hình mẫu &amp; Chuyển đổi biểu
+            cảm mắt</p>
+    </header>
+
+    <!-- Canvas Preview Card -->
+    <main class="flex flex-col items-center justify-center w-full max-w-xl my-2">
+        <div
+            class="relative bg-slate-900/90 border border-slate-700/60 p-4 sm:p-6 rounded-3xl shadow-2xl flex items-center justify-center w-full">
+            <canvas id="spidermanCanvas" width="500" height="520"
+                class="w-full max-w-[420px] h-auto aspect-[5/5.2] bg-slate-950/50 rounded-2xl border border-slate-800/80"></canvas>
+
+            <!-- Emotion Badge -->
+            <div id="emotionBadge"
+                class="absolute top-7 right-7 bg-red-600 text-white text-xs sm:text-sm font-bold px-3.5 py-1.5 rounded-full shadow-lg border border-white/20 uppercase tracking-wider transition-all duration-300">
+                Mặc định
+            </div>
+        </div>
+    </main>
+
+    <!-- Controls Section -->
+    <footer class="w-full max-w-lg mb-2">
+        <div class="bg-slate-900/80 backdrop-blur-lg p-3 sm:p-4 rounded-2xl border border-slate-800 shadow-2xl">
+            <p class="text-xs font-semibold text-slate-400 text-center mb-3 uppercase tracking-wider">Chọn Biểu Cảm Cho
+                Mắt Spider-Man</p>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <button onclick="setEmotion('neutral')" id="btn-neutral"
+                    class="emotion-btn flex flex-col items-center justify-center p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-bold transition-all active:scale-95">
+                    <span class="text-2xl mb-1">🕷️</span>
+                    <span class="text-xs">Mặc định</span>
+                </button>
+                <button onclick="setEmotion('angry')" id="btn-angry"
+                    class="emotion-btn flex flex-col items-center justify-center p-2.5 rounded-xl bg-slate-800 hover:bg-red-900/50 border border-slate-700 text-white font-bold transition-all active:scale-95">
+                    <span class="text-2xl mb-1">😡</span>
+                    <span class="text-xs">Giận dữ</span>
+                </button>
+                <button onclick="setEmotion('happy')" id="btn-happy"
+                    class="emotion-btn flex flex-col items-center justify-center p-2.5 rounded-xl bg-slate-800 hover:bg-emerald-900/50 border border-slate-700 text-white font-bold transition-all active:scale-95">
+                    <span class="text-2xl mb-1">😄</span>
+                    <span class="text-xs">Vui vẻ</span>
+                </button>
+                <button onclick="setEmotion('crying')" id="btn-crying"
+                    class="emotion-btn flex flex-col items-center justify-center p-2.5 rounded-xl bg-slate-800 hover:bg-blue-900/50 border border-slate-700 text-white font-bold transition-all active:scale-95">
+                    <span class="text-2xl mb-1">😭</span>
+                    <span class="text-xs">Khóc nhè</span>
+                </button>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        const canvas = document.getElementById('spidermanCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let currentEmotion = 'neutral';
+        let animTime = 0;
+
+        // Eye Morphing Parameters
+        // Smoothly interpolating shape vectors between expressions
+        const eyeMorph = {
+            // Neutral / Image Reference baseline shape
+            neutral: { innerTopY: -45, outerTopY: 5, innerBotY: 15, outerBotY: -35, tilt: 0, tear: 0, badge: 'Mặc định', color: 'bg-red-600' },
+            angry: { innerTopY: 5, outerTopY: 10, innerBotY: 30, outerBotY: -40, tilt: 0.15, tear: 0, badge: 'Giận dữ 😡', color: 'bg-red-700' },
+            happy: { innerTopY: -10, outerTopY: -25, innerBotY: -35, outerBotY: -30, tilt: 0, tear: 0, badge: 'Vui vẻ 😄', color: 'bg-emerald-600' },
+            crying: { innerTopY: -40, outerTopY: 35, innerBotY: 25, outerBotY: 10, tilt: -0.1, tear: 1, badge: 'Khóc nhè 😭', color: 'bg-blue-600' }
+        };
+
+        let currentMorph = {
+            innerTopY: -45,
+            outerTopY: 5,
+            innerBotY: 15,
+            outerBotY: -35,
+            tilt: 0,
+            tear: 0
+        };
+
+        // Tear particle array for crying animation
+        const tears = [
+            { x: 195, y: 220, speed: 2.5, size: 5, opacity: 1 },
+            { x: 305, y: 220, speed: 3.0, size: 6, opacity: 0.8 }
+        ];
+
+        function setEmotion(emotion) {
+            currentEmotion = emotion;
+            document.querySelectorAll('.emotion-btn').forEach(btn => {
+                btn.classList.remove('ring-2', 'ring-red-500', 'bg-slate-700');
+            });
+            const activeBtn = document.getElementById(`btn-${emotion}`);
+            if (activeBtn) {
+                activeBtn.classList.add('ring-2', 'ring-red-500', 'bg-slate-700');
+            }
+
+            const badge = document.getElementById('emotionBadge');
+            badge.innerText = eyeMorph[emotion].badge;
+            badge.className = `absolute top-7 right-7 text-white text-xs sm:text-sm font-bold px-3.5 py-1.5 rounded-full shadow-lg border border-white/20 uppercase tracking-wider transition-all duration-300 ${eyeMorph[emotion].color}`;
+        }
+
+        setEmotion('neutral');
+
+        function lerp(a, b, t) {
+            return a + (b - a) * t;
+        }
+
+        function drawBody() {
+            // Colors matching image_ce6dc6.jpg
+            const redSuit = '#bd1219';
+            const redDark = '#910b11';
+            const blueSuit = '#0b529d';
+            const lineBlack = '#080808';
+
+            ctx.lineWidth = 5.5;
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+
+            // --- 1. LEGS (Short, bent Chibi legs) ---
+            // Left Leg (boot red & pant blue)
+            ctx.save();
+            // Blue thigh
+            ctx.fillStyle = blueSuit;
+            ctx.strokeStyle = lineBlack;
+            ctx.beginPath();
+            ctx.moveTo(210, 360);
+            ctx.quadraticCurveTo(185, 385, 185, 415);
+            ctx.quadraticCurveTo(215, 435, 235, 390);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Right Leg
+            ctx.beginPath();
+            ctx.moveTo(290, 360);
+            ctx.quadraticCurveTo(315, 385, 315, 415);
+            ctx.quadraticCurveTo(285, 435, 265, 390);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Left Boot (Red)
+            ctx.fillStyle = redSuit;
+            ctx.beginPath();
+            ctx.moveTo(185, 410);
+            ctx.quadraticCurveTo(170, 440, 185, 465);
+            ctx.quadraticCurveTo(220, 475, 225, 440);
+            ctx.quadraticCurveTo(215, 415, 185, 410);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Right Boot (Red - bent like in image)
+            ctx.beginPath();
+            ctx.moveTo(315, 410);
+            ctx.quadraticCurveTo(330, 440, 315, 465);
+            ctx.quadraticCurveTo(280, 475, 275, 440);
+            ctx.quadraticCurveTo(285, 415, 315, 410);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+
+            // --- 2. TORSO / CHEST & SIDE BLUE PANELS ---
+            ctx.save();
+            ctx.fillStyle = redSuit;
+            ctx.strokeStyle = lineBlack;
+            ctx.beginPath();
+            ctx.moveTo(200, 265);
+            ctx.lineTo(300, 265);
+            ctx.quadraticCurveTo(315, 310, 295, 370);
+            ctx.lineTo(205, 370);
+            ctx.quadraticCurveTo(185, 310, 200, 265);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Blue Torso Sides
+            ctx.fillStyle = blueSuit;
+            // Left Blue Side
+            ctx.beginPath();
+            ctx.moveTo(197, 280);
+            ctx.quadraticCurveTo(220, 310, 215, 368);
+            ctx.lineTo(204, 368);
+            ctx.quadraticCurveTo(188, 320, 197, 280);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Right Blue Side
+            ctx.beginPath();
+            ctx.moveTo(303, 280);
+            ctx.quadraticCurveTo(280, 310, 285, 368);
+            ctx.lineTo(296, 368);
+            ctx.quadraticCurveTo(312, 320, 303, 280);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+
+            // --- 3. ARMS & HANDS (Spreading outward with short fingers) ---
+            ctx.save();
+            ctx.fillStyle = redSuit;
+            ctx.strokeStyle = lineBlack;
+
+            // Left Arm & Glove
+            ctx.beginPath();
+            ctx.moveTo(195, 275);
+            ctx.quadraticCurveTo(140, 290, 105, 330); // shoulder to hand
+            // Fingers
+            ctx.quadraticCurveTo(95, 345, 110, 355);
+            ctx.quadraticCurveTo(125, 360, 135, 345);
+            ctx.quadraticCurveTo(155, 320, 195, 310);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            // Right Arm & Glove
+            ctx.beginPath();
+            ctx.moveTo(305, 275);
+            ctx.quadraticCurveTo(360, 290, 395, 330);
+            // Fingers
+            ctx.quadraticCurveTo(405, 345, 390, 355);
+            ctx.quadraticCurveTo(375, 360, 365, 345);
+            ctx.quadraticCurveTo(345, 320, 305, 310);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+            ctx.restore();
+
+            // --- 4. BODY WEBS & SPIDER EMBLEM ---
+            drawBodyWebsAndEmblem();
+        }
+
+        function drawBodyWebsAndEmblem() {
+            ctx.save();
+            ctx.strokeStyle = '#080808';
+            ctx.lineWidth = 2.2;
+
+            // Torso Grid Lines
+            // Vertical web lines on chest
+            for (let x = -35; x <= 35; x += 175 / 10) {
+                ctx.beginPath();
+                ctx.moveTo(250 + x * 0.6, 265);
+                ctx.lineTo(250 + x * 1.1, 370);
+                ctx.stroke();
+            }
+
+            // Horizontal curved web lines on chest
+            for (let y = 285; y <= 355; y += 18) {
+                ctx.beginPath();
+                ctx.moveTo(202, y);
+                ctx.quadraticCurveTo(250, y + 8, 298, y);
+                ctx.stroke();
+            }
+
+            // Boots & Gloves web lines
+            // Left Boot
+            ctx.beginPath();
+            ctx.moveTo(180, 435); ctx.quadraticCurveTo(200, 445, 220, 435);
+            ctx.moveTo(182, 452); ctx.quadraticCurveTo(200, 460, 220, 452);
+            ctx.stroke();
+
+            // Right Boot
+            ctx.beginPath();
+            ctx.moveTo(280, 435); ctx.quadraticCurveTo(300, 445, 320, 435);
+            ctx.moveTo(280, 452); ctx.quadraticCurveTo(300, 460, 320, 452);
+            ctx.stroke();
+
+            // Left Glove
+            ctx.beginPath();
+            ctx.moveTo(125, 315); ctx.lineTo(138, 340);
+            ctx.moveTo(142, 305); ctx.lineTo(155, 330);
+            ctx.stroke();
+
+            // Right Glove
+            ctx.beginPath();
+            ctx.moveTo(375, 315); ctx.lineTo(362, 340);
+            ctx.moveTo(358, 305); ctx.lineTo(345, 330);
+            ctx.stroke();
+
+            // --- CHEST SPIDER EMBLEM (Accurate black spider from image_ce6dc6.jpg) ---
+            ctx.fillStyle = '#080808';
+            ctx.beginPath();
+            // Head & Abdomen
+            ctx.ellipse(250, 310, 4.5, 6.5, 0, 0, Math.PI * 2);
+            ctx.ellipse(250, 321, 6, 8.5, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Spider Legs (4 Top legs, 4 Bottom legs)
+            ctx.lineWidth = 2.8;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            // Top Legs (Angled upwards)
+            ctx.moveTo(248, 310); ctx.quadraticCurveTo(230, 290, 222, 298);
+            ctx.moveTo(248, 312); ctx.quadraticCurveTo(232, 298, 226, 312);
+            ctx.moveTo(252, 310); ctx.quadraticCurveTo(270, 290, 278, 298);
+            ctx.moveTo(252, 312); ctx.quadraticCurveTo(268, 298, 274, 312);
+
+            // Bottom Legs (Angled downwards)
+            ctx.moveTo(248, 318); ctx.quadraticCurveTo(230, 330, 224, 342);
+            ctx.moveTo(248, 322); ctx.quadraticCurveTo(234, 338, 230, 350);
+            ctx.moveTo(252, 318); ctx.quadraticCurveTo(270, 330, 276, 342);
+            ctx.moveTo(252, 322); ctx.quadraticCurveTo(266, 338, 270, 350);
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        function drawHeadAndWebs() {
+            const cx = 250;
+            const cy = 160; // Head center
+            const rx = 145; // Broad round head shape
+            const ry = 135;
+
+            ctx.save();
+
+            // --- 1. HEAD BASE MASK ---
+            ctx.fillStyle = '#bd1219';
+            ctx.strokeStyle = '#080808';
+            ctx.lineWidth = 6.5;
+
+            ctx.beginPath();
+            ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Subtle dark shadow gradient on bottom edge of head
+            const shadowGrad = ctx.createRadialGradient(cx, cy, 90, cx, cy, 145);
+            shadowGrad.addColorStop(0, 'rgba(0,0,0,0)');
+            shadowGrad.addColorStop(1, 'rgba(0,0,0,0.3)');
+            ctx.fillStyle = shadowGrad;
+            ctx.beginPath();
+            ctx.ellipse(cx, cy, rx - 2, ry - 2, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // --- 2. MASK WEBS (Radiating from nose bridge point) ---
+            ctx.strokeStyle = '#080808';
+            ctx.lineWidth = 2.2;
+            ctx.lineCap = 'round';
+
+            const originX = cx;
+            const originY = cy + 20; // Origin point between eyes
+
+            // Radial Web Rays (16 rays around the face)
+            const rayAngles = [
+                -Math.PI / 2, -Math.PI / 2.6, -Math.PI / 3.4, -Math.PI / 4.8,
+                -Math.PI / 8, 0, Math.PI / 8, Math.PI / 4.8,
+                Math.PI / 3.4, Math.PI / 2.6, Math.PI / 2,
+                Math.PI - Math.PI / 2.6, Math.PI - Math.PI / 3.4,
+                Math.PI + Math.PI / 4.8, Math.PI + Math.PI / 3.4, Math.PI + Math.PI / 2.6
+            ];
+
+            rayAngles.forEach(angle => {
+                ctx.beginPath();
+                ctx.moveTo(originX, originY);
+                // Extend to head boundary
+                const edgeX = cx + Math.cos(angle) * (rx + 5);
+                const edgeY = cy + Math.sin(angle) * (ry + 5);
+                ctx.lineTo(edgeX, edgeY);
+                ctx.stroke();
+            });
+
+            // Web Loops / Rings (Concentric arches outward)
+            const rings = [30, 55, 82, 110, 132];
+            rings.forEach(r => {
+                ctx.beginPath();
+                for (let a = 0; a <= Math.PI * 2; a += 0.2) {
+                    const wx = originX + Math.cos(a) * r * 1.05;
+                    const wy = originY + Math.sin(a) * r * 0.95;
+                    if (a === 0) ctx.moveTo(wx, wy);
+                    else ctx.lineTo(wx, wy);
+                }
+                ctx.closePath();
+                ctx.stroke();
+            });
+
+            ctx.restore();
+        }
+
+        function drawEyes() {
+            // Update interpolation values for smooth expression change
+            const target = eyeMorph[currentEmotion];
+            const speed = 0.15;
+
+            currentMorph.innerTopY = lerp(currentMorph.innerTopY, target.innerTopY, speed);
+            currentMorph.outerTopY = lerp(currentMorph.outerTopY, target.outerTopY, speed);
+            currentMorph.innerBotY = lerp(currentMorph.innerBotY, target.innerBotY, speed);
+            currentMorph.outerBotY = lerp(currentMorph.outerBotY, target.outerBotY, speed);
+            currentMorph.tilt = lerp(currentMorph.tilt, target.tilt, speed);
+            currentMorph.tear = lerp(currentMorph.tear, target.tear, speed);
+
+            // Left Eye & Right Eye positions
+            drawSingleEye(182, 175, true);
+            drawSingleEye(318, 175, false);
+
+            // Teardrop animation effect if crying
+            if (currentMorph.tear > 0.1) {
+                drawTears();
+            }
+        }
+
+        function drawSingleEye(x, y, isLeft) {
+            ctx.save();
+            ctx.translate(x, y);
+
+            // Mirror flip for right eye
+            const dir = isLeft ? 1 : -1;
+            ctx.scale(dir, 1);
+            ctx.rotate(currentMorph.tilt);
+
+            // Eye Contour Path (Precise teardrop angle from reference image)
+            // Points relative to eye center
+            const pInnerTop = { x: 52, y: currentMorph.innerTopY };
+            const pOuterTop = { x: -50, y: currentMorph.outerTopY };
+            const pOuterBot = { x: -48, y: currentMorph.outerBotY };
+            const pInnerBot = { x: 30, y: currentMorph.innerBotY + 50 };
+
+            // 1. THICK BLACK OUTER EYE FRAME
+            ctx.fillStyle = '#080808';
+            ctx.beginPath();
+            ctx.moveTo(pInnerTop.x + 8, pInnerTop.y - 8);
+            ctx.quadraticCurveTo(0, pOuterTop.y - 20, pOuterTop.x - 12, pOuterTop.y);
+            ctx.quadraticCurveTo(pOuterTop.x - 20, 10, pOuterBot.x - 10, pOuterBot.y + 20);
+            ctx.quadraticCurveTo(-10, pInnerBot.y + 20, pInnerBot.x + 10, pInnerBot.y);
+            ctx.quadraticCurveTo(pInnerTop.x + 20, 20, pInnerTop.x + 8, pInnerTop.y - 8);
+            ctx.closePath();
+            ctx.fill();
+
+            // 2. INNER WHITE LENS WITH METALLIC/GLOSS GRADIENT
+            const lensGrad = ctx.createLinearGradient(-30, -40, 20, 40);
+            lensGrad.addColorStop(0, '#ffffff');
+            lensGrad.addColorStop(0.7, '#f1f5f9');
+            lensGrad.addColorStop(1, '#cbd5e1'); // Metallic grey bottom reflection
+
+            ctx.fillStyle = lensGrad;
+            ctx.beginPath();
+            ctx.moveTo(pInnerTop.x, pInnerTop.y);
+            ctx.quadraticCurveTo(0, pOuterTop.y - 6, pOuterTop.x, pOuterTop.y);
+            ctx.quadraticCurveTo(pOuterTop.x - 6, 10, pOuterBot.x, pOuterBot.y);
+            ctx.quadraticCurveTo(-5, pInnerBot.y + 6, pInnerBot.x, pInnerBot.y);
+            ctx.quadraticCurveTo(pInnerTop.x + 6, 10, pInnerTop.x, pInnerTop.y);
+            ctx.closePath();
+            ctx.fill();
+
+            // Inner lens shadow outline
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.15)';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        function drawTears() {
+            ctx.save();
+            tears.forEach(t => {
+                t.y += t.speed;
+                if (t.y > 330) {
+                    t.y = 210 + Math.random() * 15;
+                    t.opacity = 1;
+                }
+
+                ctx.fillStyle = `rgba(56, 189, 248, ${t.opacity})`;
+                ctx.strokeStyle = '#0284c7';
+                ctx.lineWidth = 1.5;
+
+                ctx.beginPath();
+                ctx.moveTo(t.x, t.y - t.size * 1.5);
+                ctx.bezierCurveTo(t.x + t.size, t.y, t.x + t.size, t.y + t.size, t.x, t.y + t.size * 1.3);
+                ctx.bezierCurveTo(t.x - t.size, t.y + t.size, t.x - t.size, t.y, t.x, t.y - t.size * 1.5);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            });
+            ctx.restore();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            animTime += 0.04;
+
+            // Subtle floating / idle breathing animation
+            let offsetY = Math.sin(animTime * 2) * 4;
+            let rotateAngle = 0;
+
+            // Expression specific body animation effects
+            if (currentEmotion === 'happy') {
+                offsetY = Math.abs(Math.sin(animTime * 6)) * -12; // Cheerful bouncing
+            } else if (currentEmotion === 'angry') {
+                offsetY += (Math.random() - 0.5) * 1.5; // Fierce vibration
+            } else if (currentEmotion === 'crying') {
+                rotateAngle = Math.sin(animTime * 4) * 0.03; // Sad head tilt
+            }
+
+            ctx.save();
+            ctx.translate(0, offsetY);
+
+            // Ground Shadow
+            ctx.save();
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+            ctx.beginPath();
+            ctx.ellipse(250, 480 - offsetY * 0.5, 90, 14, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            // Head Tilt Transformation
+            ctx.translate(250, 260);
+            ctx.rotate(rotateAngle);
+            ctx.translate(-250, -260);
+
+            // Render Layers in correct depth order
+            drawBody();
+            drawHeadAndWebs();
+            drawEyes();
+
+            ctx.restore();
+
+            requestAnimationFrame(draw);
+        }
+
+        // Initialize Canvas when page is ready
+        window.onload = function () {
+            draw();
+        };
+    </script>
+</body>
+
+</html>

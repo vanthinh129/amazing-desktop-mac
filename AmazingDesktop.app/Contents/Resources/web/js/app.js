@@ -129,10 +129,15 @@ class AppController {
             }
         });
 
-        if (type === 'spiderman' && (window.SpiderCharacter || typeof SpiderCharacter !== 'undefined')) {
+        if ((type === 'spiderman' || type === 'chase') && (window.SpiderCharacter || window.SpiderChaseCharacter || typeof SpiderCharacter !== 'undefined')) {
             if (avatarWrapper) avatarWrapper.classList.add('fullscreen-mode');
-            const SpideyCls = window.SpiderCharacter || SpiderCharacter;
-            window.aiCharacter = new SpideyCls('characterCanvas');
+            if (type === 'chase' && (window.SpiderChaseCharacter || typeof SpiderChaseCharacter !== 'undefined')) {
+                const ChaseCls = window.SpiderChaseCharacter || SpiderChaseCharacter;
+                window.aiCharacter = new ChaseCls('characterCanvas');
+            } else {
+                const SpideyCls = window.SpiderCharacter || SpiderCharacter;
+                window.aiCharacter = new SpideyCls('characterCanvas');
+            }
         } else {
             if (avatarWrapper) avatarWrapper.classList.remove('fullscreen-mode');
             if (canvas) {

@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chibi Spider-Man Fullscreen Stage - Pure Full-Window Canvas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Fredoka', sans-serif;
+            background: #040714;
+            color: #f8fafc;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        #spidermanCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: block;
+            cursor: crosshair;
+        }
+
+        .btn-action {
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .btn-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-action:active {
+            transform: scale(0.95);
+        }
+
+        ::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+
+<body class="relative w-screen h-screen overflow-hidden">
+
+    <!-- 100% Full-Viewport Canvas -->
+    <canvas id="spidermanCanvas"></canvas>
+
+    <!-- Ultra-Compact Minimal Floating Bottom Action Bar -->
+    <footer class="fixed bottom-3 left-1/2 -translate-x-1/2 z-30 pointer-events-auto">
+        <div class="bg-slate-950/80 backdrop-blur-xl px-3 py-2 rounded-2xl border border-slate-700/60 shadow-2xl flex items-center gap-1.5 overflow-x-auto max-w-[95vw]">
+            <button onclick="startPhysicsJumpSequence()" id="btn-main-jump"
+                class="btn-action px-3 py-1.5 rounded-xl bg-gradient-to-br from-red-600 to-rose-700 hover:from-red-500 hover:to-rose-600 border border-red-400/40 text-white font-bold text-xs flex items-center gap-1.5 shadow-md whitespace-nowrap">
+                <span id="jumpIcon">🧗</span>
+                <span id="jumpBtnText">1. Nhảy Bám Trần</span>
+            </button>
+
+            <button onclick="startWideSwingSequence()" id="btn-wide-swing"
+                class="btn-action px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-slate-100 font-bold text-xs flex items-center gap-1.5 whitespace-nowrap">
+                <span>🕸️</span><span>2. Swing NYC</span>
+            </button>
+
+            <button onclick="startSlingshotSequence()" id="btn-slingshot"
+                class="btn-action px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-slate-100 font-bold text-xs flex items-center gap-1.5 whitespace-nowrap">
+                <span>🚀</span><span>3. Slingshot</span>
+            </button>
+
+            <button onclick="startHeroLandingSequence()" id="btn-hero-landing"
+                class="btn-action px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-slate-100 font-bold text-xs flex items-center gap-1.5 whitespace-nowrap">
+                <span>💥</span><span>4. Hero Landing</span>
+            </button>
+
+            <button onclick="startIronSpiderSequence()" id="btn-iron-spider"
+                class="btn-action px-3.5 py-1.5 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-600 hover:from-amber-400 hover:to-yellow-500 border border-amber-300/60 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-lg shadow-amber-950/40 whitespace-nowrap">
+                <span>🤖</span><span>5. 4 Chân Khổng Lồ</span>
+            </button>
+
+            <button onclick="startHammockSequence()" id="btn-hammock"
+                class="btn-action px-3 py-1.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-slate-100 font-bold text-xs flex items-center gap-1.5 whitespace-nowrap">
+                <span>🛋️</span><span>6. Võng Tơ</span>
+            </button>
+
+            <div class="h-4 w-px bg-slate-700/80 mx-1"></div>
+
+            <div class="flex items-center gap-1">
+                <button onclick="setEmotion('neutral')" class="btn-action emotion-btn p-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-xs">🕷️</button>
+                <button onclick="setEmotion('angry')" class="btn-action emotion-btn p-1.5 rounded-lg bg-slate-800/80 hover:bg-red-950/60 border border-slate-700 text-xs">😡</button>
+                <button onclick="setEmotion('happy')" class="btn-action emotion-btn p-1.5 rounded-lg bg-slate-800/80 hover:bg-emerald-950/60 border border-slate-700 text-xs">😄</button>
+                <button onclick="setEmotion('crying')" class="btn-action emotion-btn p-1.5 rounded-lg bg-slate-800/80 hover:bg-blue-950/60 border border-slate-700 text-xs">😭</button>
+                <button onclick="setEmotion('suspicious')" class="btn-action emotion-btn p-1.5 rounded-lg bg-slate-800/80 hover:bg-amber-950/60 border border-slate-700 text-xs">🧐</button>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript Canvas Code -->
+    <script>
+        const canvas = document.getElementById('spidermanCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let CANVAS_W = window.innerWidth;
+        let CANVAS_H = window.innerHeight;
+        let ROOF_FLOOR_Y = CANVAS_H - 100;
+        let GROUND_Y = ROOF_FLOOR_Y - 215;
+        let CEILING_Y = 140;
+
+        // Kinematics & Posture State
+        let actionState = 'STANDING';
+        let stateTimer = 0;
+
+        let spideyPos = { x: CANVAS_W / 2, y: GROUND_Y };
+        let spideyVel = { x: 0, y: 0 };
+        let spideyRotation = 0;
+        let squatProgress = 0;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            CANVAS_W = canvas.width;
+            CANVAS_H = canvas.height;
+            ROOF_FLOOR_Y = CANVAS_H - 100;
+            GROUND_Y = ROOF_FLOOR_Y - 215;
+            if (typeof spideyPos !== 'undefined' && actionState === 'STANDING') {
+                spideyPos.y = GROUND_Y;
+            }
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // FPS Tracker
+        let lastFrameTime = performance.now();
+        let frameCount = 0;
+        let fps = 60;
+
+        // General Anim Variables
+        let globalAnimTime = 0;
+        let currentEmotion = 'neutral';
+
+        // Iron Spider Mechanical Legs State
+        let mechLegDeployProgress = 0.0;
+
+        // Hand Gestures
+        let leftHandPose = 'OPEN';
+        let rightHandPose = 'OPEN';
+
+        // Camera Shake Effect
+        let cameraShake = { x: 0, y: 0, intensity: 0 };
+
+        // --- EASING MATH HELPERS ---
+        function lerp(a, b, t) {
+            return a + (b - a) * t;
+        }
+
+        function easeInOutCubic(t) {
+            return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+        }
+
+        // Morphing Eye Shapes
+        const eyeMorphTemplates = {
+            neutral: { innerTopY: -48, outerTopY: 5, innerBotY: 18, outerBotY: -38, tilt: 0, badge: 'Mắt: Mặc Định 🕷️' },
+            angry: { innerTopY: 12, outerTopY: 18, innerBotY: 34, outerBotY: -45, tilt: 0.22, badge: 'Mắt: Giận Dữ 😡' },
+            happy: { innerTopY: -15, outerTopY: -32, innerBotY: -42, outerBotY: -35, tilt: 0, badge: 'Mắt: Vui Vẻ 😄' },
+            crying: { innerTopY: -45, outerTopY: 42, innerBotY: 30, outerBotY: 15, tilt: -0.15, badge: 'Mắt: Khóc Nhè 😭' },
+            suspicious: { innerTopY: 20, outerTopY: -15, innerBotY: 10, outerBotY: -40, tilt: 0.12, badge: 'Mắt: Nghi Mờ 🧐' }
+        };
+
+        let eyeCurrent = { innerTopY: -48, outerTopY: 5, innerBotY: 18, outerBotY: -38, tilt: 0 };
+
+        // Particles, Shockwaves, and Webs Array
+        let activeWebs = [];
+        let activeParticles = [];
+        let activeShockwaves = [];
+
+        // Swinging variables
+        let swingAnchor = { x: CANVAS_W / 2, y: 40 };
+        let swingLength = 380;
+        let swingAngle = -Math.PI / 3;
+        let swingSpeed = 0;
+
+        function setPhaseBadge(text, bgColor = 'from-red-600 to-rose-600') {
+            const badge = document.getElementById('phaseBadge');
+            if (badge) {
+                badge.innerText = text;
+                badge.className = `fixed top-4 left-4 z-20 bg-gradient-to-r ${bgColor} text-white text-xs font-bold px-3.5 py-1.5 rounded-full shadow-2xl border border-white/20 uppercase tracking-wider transition-all duration-300 pointer-events-none backdrop-blur-md`;
+            }
+        }
+
+        function setEmotion(emotion) {
+            currentEmotion = emotion;
+            document.querySelectorAll('.emotion-btn').forEach(btn => {
+                btn.classList.remove('ring-2', 'ring-red-500', 'bg-slate-700');
+            });
+            const badge = document.getElementById('emotionBadge');
+            if (badge && eyeMorphTemplates[emotion]) {
+                badge.innerText = eyeMorphTemplates[emotion].badge;
+            }
+        }
+        setEmotion('neutral');
+
+        function triggerWebShoot(targetX, targetY, isLeftWrist = true, type = 'STANDARD') {
+            const wristOrigin = getWristWorldPos(isLeftWrist);
+
+            if (isLeftWrist) leftHandPose = 'THWIP';
+            else rightHandPose = 'THWIP';
+
+            setTimeout(() => {
+                if (actionState === 'STANDING') {
+                    leftHandPose = 'OPEN';
+                    rightHandPose = 'OPEN';
+                }
+            }, 600);
+
+            activeWebs.push({
+                startX: wristOrigin.x,
+                startY: wristOrigin.y,
+                endX: targetX,
+                endY: targetY,
+                progress: 0,
+                life: 55,
+                maxLife: 55,
+                splatterRadius: 36 + Math.random() * 14,
+                type: type
+            });
+
+            for (let i = 0; i < 16; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const spd = 2 + Math.random() * 6;
+                activeParticles.push({
+                    x: targetX,
+                    y: targetY,
+                    vx: Math.cos(angle) * spd,
+                    vy: Math.sin(angle) * spd,
+                    life: 25 + Math.random() * 15,
+                    maxLife: 40,
+                    color: '#ffffff',
+                    size: 2 + Math.random() * 3
+                });
+            }
+        }
+
+        function triggerShootCeilingWeb() {
+            triggerWebShoot(spideyPos.x - 50, 40, true);
+            triggerWebShoot(spideyPos.x + 50, 40, false);
+        }
+
+        function triggerShootSideWeb(toLeft = true) {
+            const targetX = toLeft ? 80 : CANVAS_W - 80;
+            triggerWebShoot(targetX, 300, !toLeft);
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            actionState = 'ZIP_AIR';
+            stateTimer = 0;
+            triggerWebShoot(e.clientX, e.clientY, true, 'ZIP');
+            
+            spideyVel.x = (e.clientX - spideyPos.x) * 0.08;
+            spideyVel.y = (e.clientY - spideyPos.y) * 0.08;
+            
+            setPhaseBadge('Bắn Tơ Đu Zip Không Trung', 'from-amber-600 to-yellow-600');
+        });
+
+        // --- ACTION 1: Physics Ceiling Jump Sequence ---
+        function startPhysicsJumpSequence() {
+            if (actionState !== 'STANDING' && actionState !== 'CEILING') return;
+
+            if (actionState === 'STANDING') {
+                actionState = 'SQUATTING';
+                stateTimer = 0;
+                setPhaseBadge('Khuỵu Người Chống Tay (1s Lấy Đà)', 'from-amber-600 to-orange-600');
+                document.getElementById('jumpBtnText').innerText = 'ĐANG KHUỴU LẤY ĐÀ...';
+            } else if (actionState === 'CEILING') {
+                actionState = 'DROPPING';
+                stateTimer = 0;
+                setPhaseBadge('Thả Người Rơi Tiếp Đất', 'from-blue-600 to-indigo-600');
+                document.getElementById('jumpBtnText').innerText = '1. Nhảy Bám Trần';
+                document.getElementById('jumpIcon').innerText = '🧗';
+            }
+        }
+
+        // --- ACTION 2: Wide Pendulum Swing Across City ---
+        function startWideSwingSequence() {
+            actionState = 'SWINGING';
+            stateTimer = 0;
+            swingAnchor = { x: CANVAS_W / 2, y: 40 };
+            swingLength = 400;
+            swingAngle = -Math.PI / 2.8;
+            swingSpeed = 0.045;
+            leftHandPose = 'GRAB_ROPE';
+            rightHandPose = 'GRAB_ROPE';
+            setPhaseBadge('Đu Tơ Mạng Nhện Bay Xuyên NYC 🕸️', 'from-rose-600 to-pink-600');
+        }
+
+        // --- ACTION 3: Elastic Slingshot Launch ---
+        function startSlingshotSequence() {
+            actionState = 'SLINGSHOT_PREP';
+            stateTimer = 0;
+            spideyPos = { x: 250, y: GROUND_Y };
+            spideyRotation = 0;
+            squatProgress = 1;
+            rightHandPose = 'GROUND_TOUCH';
+            leftHandPose = 'THWIP';
+            
+            triggerWebShoot(80, 250, true);
+            triggerWebShoot(80, 320, false);
+            
+            setPhaseBadge('Đang Kéo Căng Dây Mạng Nhện Slingshot...', 'from-orange-600 to-red-600');
+        }
+
+        // --- ACTION 4: Superhero 3-Point Shockwave Landing ---
+        function startHeroLandingSequence() {
+            actionState = 'HERO_LANDING_AIR';
+            stateTimer = 0;
+            spideyPos = { x: CANVAS_W / 2, y: 80 };
+            spideyVel = { x: 0, y: 26 };
+            spideyRotation = 0;
+            leftHandPose = 'OPEN';
+            rightHandPose = 'OPEN';
+            setPhaseBadge('Thả Rơi Từ Tầng Cao... Prepare Impact!', 'from-purple-600 to-indigo-600');
+        }
+
+        // --- ACTION 5: GIANT IRON SPIDER MECH LEGS HOVERING & WALL CRAWL ---
+        function startIronSpiderSequence() {
+            actionState = 'MECH_DEPLOY';
+            stateTimer = 0;
+            spideyPos = { x: CANVAS_W / 2, y: GROUND_Y };
+            spideyRotation = 0;
+            mechLegDeployProgress = 0.0;
+            squatProgress = 0.3;
+            setEmotion('angry');
+            setPhaseBadge('🤖 Phase 1: Spidey Mọc 4 Chân Khổng Lồ Nâng Thân Lơ Lửng!', 'from-amber-500 to-yellow-500');
+        }
+
+        // --- ACTION 6: Web Hammock Rest ---
+        function startHammockSequence() {
+            actionState = 'HAMMOCK';
+            stateTimer = 0;
+            spideyPos = { x: CANVAS_W / 2, y: 350 };
+            spideyRotation = 0;
+            squatProgress = 0;
+            leftHandPose = 'OPEN';
+            rightHandPose = 'OPEN';
+            setEmotion('happy');
+            setPhaseBadge('Treo Võng Mạng Nhện Thư Giãn NYC 🛋️', 'from-cyan-600 to-blue-600');
+        }
+
+        // State Machine Controller Update
+        function updateStatePhysics() {
+            stateTimer++;
+
+            if (actionState === 'SQUATTING') {
+                const t = Math.min(1, stateTimer / 55);
+                squatProgress = lerp(0, 1, t);
+                if (squatProgress > 0.4) rightHandPose = 'GROUND_TOUCH';
+
+                if (stateTimer >= 60) {
+                    actionState = 'LAUNCHING';
+                    stateTimer = 0;
+                    rightHandPose = 'THWIP';
+                    leftHandPose = 'THWIP';
+                    triggerWebShoot(spideyPos.x - 80, 40, true);
+                    triggerWebShoot(spideyPos.x + 80, 40, false);
+                    setPhaseBadge('Bật Vọt Bắn Tơ Cổ Tay (Launch)', 'from-emerald-600 to-teal-600');
+                }
+
+            } else if (actionState === 'LAUNCHING') {
+                const t = Math.min(1, stateTimer / 35);
+                const easeUp = 1 - Math.pow(1 - t, 3);
+                spideyPos.y = lerp(GROUND_Y, CEILING_Y, easeUp);
+                spideyRotation = lerp(0, Math.PI, t);
+                squatProgress = lerp(1, 0, t);
+
+                if (stateTimer >= 35) {
+                    actionState = 'CEILING';
+                    stateTimer = 0;
+                    spideyPos.y = CEILING_Y;
+                    spideyRotation = Math.PI;
+                    leftHandPose = 'CEILING_GRAB';
+                    rightHandPose = 'CEILING_GRAB';
+                    setPhaseBadge('Bám Ngược Trần Nhà Sân Thượng', 'from-purple-600 to-pink-600');
+                    document.getElementById('jumpBtnText').innerText = 'Thả Rơi Tiếp Đất';
+                    document.getElementById('jumpIcon').innerText = '🤸';
+                }
+
+            } else if (actionState === 'DROPPING') {
+                const t = Math.min(1, stateTimer / 30);
+                const easeDown = t * t;
+                spideyPos.y = lerp(CEILING_Y, GROUND_Y, easeDown);
+                spideyRotation = lerp(Math.PI, 0, t);
+                leftHandPose = 'OPEN';
+                rightHandPose = 'OPEN';
+
+                if (stateTimer >= 30) {
+                    actionState = 'STANDING';
+                    stateTimer = 0;
+                    spideyPos.y = GROUND_Y;
+                    spideyRotation = 0;
+                    squatProgress = 0;
+                    setPhaseBadge('Đứng Bình Thường (Sân Thượng NYC)', 'from-red-600 to-rose-600');
+                    document.getElementById('jumpBtnText').innerText = '1. Nhảy Bám Trần';
+                    document.getElementById('jumpIcon').innerText = '🧗';
+                }
+
+            } else if (actionState === 'SWINGING') {
+                swingAngle += swingSpeed;
+                if (swingAngle > Math.PI / 2.8 || swingAngle < -Math.PI / 2.8) {
+                    swingSpeed = -swingSpeed;
+                }
+
+                spideyPos.x = swingAnchor.x + Math.sin(swingAngle) * swingLength;
+                spideyPos.y = swingAnchor.y + Math.cos(swingAngle) * swingLength;
+                spideyRotation = -swingAngle * 0.8;
+
+                if (stateTimer % 3 === 0) {
+                    activeParticles.push({
+                        x: spideyPos.x + (Math.random() - 0.5) * 40,
+                        y: spideyPos.y + (Math.random() - 0.5) * 40,
+                        vx: -swingSpeed * 80,
+                        vy: (Math.random() - 0.5) * 2,
+                        life: 20,
+                        maxLife: 20,
+                        color: 'rgba(255, 255, 255, 0.4)',
+                        size: 2
+                    });
+                }
+
+                if (stateTimer > 240) {
+                    actionState = 'STANDING';
+                    spideyPos = { x: CANVAS_W / 2, y: GROUND_Y };
+                    spideyRotation = 0;
+                    leftHandPose = 'OPEN';
+                    rightHandPose = 'OPEN';
+                    setPhaseBadge('Đứng Bình Thường (Sân Thượng NYC)', 'from-red-600 to-rose-600');
+                }
+
+            } else if (actionState === 'SLINGSHOT_PREP') {
+                spideyPos.x = 250 + (Math.random() - 0.5) * 3;
+                if (stateTimer >= 50) {
+                    actionState = 'SLINGSHOT_LAUNCH';
+                    stateTimer = 0;
+                    spideyVel = { x: 28, y: -16 };
+                    leftHandPose = 'OPEN';
+                    rightHandPose = 'OPEN';
+                    setPhaseBadge('BẮN SLINGSHOT TỐC ĐỘ CAO LỘN 360° 💥', 'from-red-600 to-amber-600');
+                }
+
+            } else if (actionState === 'SLINGSHOT_LAUNCH') {
+                spideyPos.x += spideyVel.x;
+                spideyPos.y += spideyVel.y;
+                spideyVel.y += 0.8;
+                spideyRotation += 0.28;
+
+                if (spideyPos.y >= GROUND_Y) {
+                    spideyPos.y = GROUND_Y;
+                    spideyPos.x = Math.min(CANVAS_W - 150, spideyPos.x);
+                    spideyRotation = 0;
+                    actionState = 'HERO_LANDING_IMPACT';
+                    stateTimer = 0;
+                }
+
+            } else if (actionState === 'HERO_LANDING_AIR') {
+                spideyPos.y += spideyVel.y;
+                if (spideyPos.y >= GROUND_Y) {
+                    spideyPos.y = GROUND_Y;
+                    actionState = 'HERO_LANDING_IMPACT';
+                    stateTimer = 0;
+                }
+
+            } else if (actionState === 'HERO_LANDING_IMPACT') {
+                squatProgress = 1.0;
+                rightHandPose = 'GROUND_TOUCH';
+                leftHandPose = 'OPEN';
+
+                if (stateTimer === 1) {
+                    cameraShake.intensity = 16;
+                    activeShockwaves.push({
+                        x: spideyPos.x,
+                        y: GROUND_Y + 10,
+                        radius: 10,
+                        maxRadius: 240,
+                        alpha: 1.0
+                    });
+
+                    for (let i = 0; i < 30; i++) {
+                        const ang = Math.PI + (Math.random() - 0.5) * Math.PI * 0.8;
+                        const spd = 4 + Math.random() * 12;
+                        activeParticles.push({
+                            x: spideyPos.x,
+                            y: GROUND_Y + 5,
+                            vx: Math.cos(ang) * spd,
+                            vy: Math.sin(ang) * spd,
+                            life: 30 + Math.random() * 20,
+                            maxLife: 50,
+                            color: Math.random() > 0.5 ? '#f59e0b' : '#ef4444',
+                            size: 3 + Math.random() * 4
+                        });
+                    }
+                    setPhaseBadge('💥 SUPERHERO 3-POINT LANDING SHOCKWAVE!', 'from-amber-600 to-red-600');
+                }
+
+                if (stateTimer > 60) {
+                    actionState = 'STANDING';
+                    squatProgress = 0;
+                    rightHandPose = 'OPEN';
+                    setPhaseBadge('Đứng Bình Thường (Sân Thượng NYC)', 'from-red-600 to-rose-600');
+                }
+
+            } else if (actionState === 'MECH_DEPLOY') {
+                const progress = Math.min(1.0, stateTimer / 45);
+                const easedT = easeInOutCubic(progress);
+                mechLegDeployProgress = easedT;
+                
+                spideyPos.y = lerp(GROUND_Y, 340, easedT);
+                spideyPos.x = CANVAS_W / 2;
+                squatProgress = 0.4;
+
+                if (stateTimer >= 50) {
+                    actionState = 'MECH_WALK_TO_WALL';
+                    stateTimer = 0;
+                    setPhaseBadge('🤖 Phase 2: 4 Chân Cà Kheo Khổng Lồ Đẩy Thân Lơ Lửng Di Chuyển Lại Tường', 'from-amber-600 to-orange-600');
+                }
+
+            } else if (actionState === 'MECH_WALK_TO_WALL') {
+                const progress = Math.min(1.0, stateTimer / 100);
+                const easedX = easeInOutCubic(progress);
+                spideyPos.x = lerp(CANVAS_W / 2, 240, easedX);
+
+                const bodyBobY = Math.sin(stateTimer * 0.22) * 9;
+                const bodySwayZ = Math.cos(stateTimer * 0.11) * 0.05;
+                spideyPos.y = 340 + bodyBobY;
+                spideyRotation = bodySwayZ;
+
+                if (stateTimer >= 100) {
+                    actionState = 'MECH_WALL_CRAWL';
+                    stateTimer = 0;
+                    spideyRotation = 0;
+                    setPhaseBadge('🤖 Phase 3: 4 Chân Máy Khổng Lồ Cắm Vào Tường Oscorp Leo Thẳng Lên!', 'from-red-600 to-amber-600');
+                }
+
+            } else if (actionState === 'MECH_WALL_CRAWL') {
+                const progress = Math.min(1.0, stateTimer / 120);
+                const easedY = easeInOutCubic(progress);
+                const crawlY = lerp(340, 140, easedY);
+                spideyPos.y = crawlY;
+                spideyPos.x = 240 + Math.sin(stateTimer * 0.18) * 3;
+
+                if (stateTimer >= 120) {
+                    actionState = 'MECH_RETRACT';
+                    stateTimer = 0;
+                    setPhaseBadge('🤖 Phase 4: Thu 4 Chân Máy Vào Lưng & Đặt Thân Xuống Sân Thượng', 'from-emerald-600 to-teal-600');
+                }
+
+            } else if (actionState === 'MECH_RETRACT') {
+                const progress = Math.min(1.0, stateTimer / 35);
+                const easedT = easeInOutCubic(progress);
+                mechLegDeployProgress = Math.max(0, 1.0 - easedT);
+                spideyPos.y = lerp(140, GROUND_Y, easedT);
+                spideyPos.x = lerp(240, 220, easedT);
+                spideyRotation = lerp(spideyRotation, 0, easedT);
+
+                if (stateTimer >= 35) {
+                    actionState = 'STANDING';
+                    spideyPos = { x: 220, y: GROUND_Y };
+                    spideyRotation = 0;
+                    squatProgress = 0;
+                    setPhaseBadge('Đứng Bình Thường (Sân Thượng NYC)', 'from-red-600 to-rose-600');
+                }
+
+            } else if (actionState === 'ZIP_AIR') {
+                spideyPos.x += spideyVel.x;
+                spideyPos.y += spideyVel.y;
+                spideyVel.x *= 0.88;
+                spideyVel.y *= 0.88;
+
+                if (stateTimer > 25) {
+                    actionState = 'STANDING';
+                    spideyVel = { x: 0, y: 0 };
+                    spideyPos.y = Math.min(GROUND_Y, Math.max(150, spideyPos.y));
+                    setPhaseBadge('Đứng Bình Thường (Sân Thượng NYC)', 'from-red-600 to-rose-600');
+                }
+            }
+
+            if (cameraShake.intensity > 0) {
+                cameraShake.x = (Math.random() - 0.5) * cameraShake.intensity;
+                cameraShake.y = (Math.random() - 0.5) * cameraShake.intensity;
+                cameraShake.intensity *= 0.9;
+                if (cameraShake.intensity < 0.2) cameraShake.intensity = 0;
+            } else {
+                cameraShake.x = 0;
+                cameraShake.y = 0;
+            }
+        }
+
+        function getWristWorldPos(isLeft) {
+            const side = isLeft ? -1 : 1;
+            const rad = spideyRotation;
+            const cos = Math.cos(rad);
+            const sin = Math.sin(rad);
+
+            const localX = side * (85 - squatProgress * 10);
+            const localY = -10 + squatProgress * 55;
+
+            return {
+                x: spideyPos.x + (localX * cos - localY * sin),
+                y: spideyPos.y + (localX * sin + localY * cos)
+            };
+        }
+
+        // --- DRAWING BACKDROP & SKYLINE ---
+        function drawCitySkylineBackdrop() {
+            // 1. Night Sky Gradient
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, CANVAS_H);
+            skyGrad.addColorStop(0, '#040714');
+            skyGrad.addColorStop(0.5, '#0b1329');
+            skyGrad.addColorStop(1, '#1a0b2e');
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+            // 2. Stars
+            ctx.fillStyle = '#ffffff';
+            for (let i = 0; i < 60; i++) {
+                const sx = (i * 47) % CANVAS_W;
+                const sy = (i * 23) % (CANVAS_H * 0.5);
+                const alpha = 0.3 + Math.sin(globalAnimTime * 2 + i) * 0.3;
+                ctx.globalAlpha = alpha;
+                ctx.fillRect(sx, sy, 2, 2);
+            }
+            ctx.globalAlpha = 1.0;
+
+            // 3. Full Moon with Glow
+            ctx.save();
+            ctx.shadowColor = 'rgba(255, 255, 255, 0.4)';
+            ctx.shadowBlur = 30;
+            const moonGrad = ctx.createRadialGradient(CANVAS_W - 200, 110, 10, CANVAS_W - 200, 110, 55);
+            moonGrad.addColorStop(0, '#ffffff');
+            moonGrad.addColorStop(0.7, '#e2e8f0');
+            moonGrad.addColorStop(1, '#94a3b8');
+            ctx.fillStyle = moonGrad;
+            ctx.beginPath();
+            ctx.arc(CANVAS_W - 200, 110, 55, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            // 4. Parallax Background Skyscrapers
+            ctx.fillStyle = '#0a0f24';
+            ctx.fillRect(50, 220, 140, CANVAS_H);
+            ctx.fillRect(220, 180, 170, CANVAS_H);
+            ctx.fillRect(420, 260, 130, CANVAS_H);
+            ctx.fillRect(580, 140, 220, CANVAS_H); // Oscorp Tower
+            ctx.fillRect(830, 220, 160, CANVAS_H);
+            ctx.fillRect(1020, 190, 180, CANVAS_H);
+            if (CANVAS_W > 1200) {
+                ctx.fillRect(1240, 200, 200, CANVAS_H);
+                ctx.fillRect(1480, 160, 220, CANVAS_H);
+            }
+
+            // Glowing Windows
+            ctx.fillStyle = '#fef08a';
+            ctx.globalAlpha = 0.65;
+            for (let bx = 60; bx < CANVAS_W - 80; bx += 70) {
+                for (let by = 240; by < CANVAS_H - 120; by += 45) {
+                    if ((bx + by) % 3 === 0) {
+                        ctx.fillRect(bx, by, 12, 18);
+                    }
+                }
+            }
+            ctx.globalAlpha = 1.0;
+
+            // OSCORP Glowing Cyan Logo
+            ctx.save();
+            ctx.font = '900 22px Fredoka, sans-serif';
+            ctx.fillStyle = '#38bdf8';
+            ctx.shadowColor = '#0284c7';
+            ctx.shadowBlur = 15;
+            ctx.fillText('OSCORP', 640, 175);
+            ctx.restore();
+
+            // 5. Left Building Wall (Oscorp Brick/Glass Wall for Crawling)
+            ctx.fillStyle = '#0f172a';
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 4;
+            ctx.fillRect(0, 0, 130, CANVAS_H);
+            ctx.strokeRect(0, 0, 130, CANVAS_H);
+
+            ctx.strokeStyle = 'rgba(51, 65, 85, 0.4)';
+            ctx.lineWidth = 1.5;
+            for (let wy = 20; wy < CANVAS_H; wy += 35) {
+                ctx.beginPath();
+                ctx.moveTo(0, wy); ctx.lineTo(130, wy);
+                ctx.stroke();
+            }
+
+            // Right Wall
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(CANVAS_W - 110, 0, 110, CANVAS_H);
+            ctx.strokeRect(CANVAS_W - 110, 0, 110, CANVAS_H);
+
+            // 6. Foreground Rooftop Ledge
+            const roofGrad = ctx.createLinearGradient(0, ROOF_FLOOR_Y, 0, CANVAS_H);
+            roofGrad.addColorStop(0, '#1e293b');
+            roofGrad.addColorStop(1, '#0f172a');
+            ctx.fillStyle = roofGrad;
+            ctx.fillRect(130, ROOF_FLOOR_Y, CANVAS_W - 240, CANVAS_H - ROOF_FLOOR_Y);
+
+            ctx.strokeStyle = '#38bdf8';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(130, ROOF_FLOOR_Y);
+            ctx.lineTo(CANVAS_W - 110, ROOF_FLOOR_Y);
+            ctx.stroke();
+        }
+
+        // --- DRAW HANDS ---
+        function drawFingersAndHand(ctx, isLeft, pose) {
+            ctx.save();
+            const redSuit = '#c01118';
+            const strokeColor = '#09090b';
+
+            ctx.fillStyle = redSuit;
+            ctx.strokeStyle = strokeColor;
+            ctx.lineWidth = 3.8;
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+
+            if (!isLeft) ctx.scale(-1, 1);
+
+            if (pose === 'THWIP') {
+                ctx.beginPath();
+                ctx.moveTo(-12, 12);
+                ctx.quadraticCurveTo(-26, 4, -28, -12);
+                ctx.quadraticCurveTo(-20, -16, -10, -6);
+                ctx.lineTo(-12, -42);
+                ctx.quadraticCurveTo(-5, -46, 1, -40);
+                ctx.lineTo(-1, -12);
+                ctx.quadraticCurveTo(6, -20, 10, -16);
+                ctx.quadraticCurveTo(8, -4, 2, -2);
+                ctx.quadraticCurveTo(12, -18, 16, -14);
+                ctx.quadraticCurveTo(14, -2, 6, 2);
+                ctx.lineTo(16, -34);
+                ctx.quadraticCurveTo(22, -38, 26, -32);
+                ctx.lineTo(16, 14);
+                ctx.quadraticCurveTo(2, 22, -12, 12);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = '#e2e8f0';
+                ctx.beginPath();
+                ctx.arc(0, 4, 3.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+            } else if (pose === 'GROUND_TOUCH') {
+                ctx.beginPath();
+                ctx.moveTo(-18, 10);
+                ctx.lineTo(-32, -12); ctx.lineTo(-20, -16);
+                ctx.lineTo(-18, -36); ctx.lineTo(-6, -35);
+                ctx.lineTo(-2, -42); ctx.lineTo(8, -38);
+                ctx.lineTo(12, -36); ctx.lineTo(18, -30);
+                ctx.lineTo(24, -20); ctx.lineTo(18, 12);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+            } else if (pose === 'CEILING_GRAB' || pose === 'WALL_STICK') {
+                ctx.beginPath();
+                ctx.moveTo(-12, 10);
+                ctx.quadraticCurveTo(-24, -10, -16, -20);
+                ctx.quadraticCurveTo(-8, -25, -2, -10);
+                ctx.quadraticCurveTo(4, -28, 10, -12);
+                ctx.quadraticCurveTo(16, -24, 20, -8);
+                ctx.lineTo(12, 12);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+            } else {
+                ctx.beginPath();
+                ctx.moveTo(-10, 12);
+                ctx.quadraticCurveTo(-25, 2, -26, -10);
+                ctx.quadraticCurveTo(-18, -16, -8, -6);
+                ctx.lineTo(-11, -30);
+                ctx.quadraticCurveTo(-4, -36, 1, -29);
+                ctx.lineTo(-2, -8);
+                ctx.lineTo(3, -35);
+                ctx.quadraticCurveTo(10, -39, 14, -33);
+                ctx.lineTo(8, -6);
+                ctx.lineTo(15, -28);
+                ctx.quadraticCurveTo(21, -32, 24, -26);
+                ctx.lineTo(16, -4);
+                ctx.lineTo(23, -18);
+                ctx.quadraticCurveTo(28, -21, 29, -14);
+                ctx.quadraticCurveTo(22, 12, -10, 12);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+            }
+
+            ctx.restore();
+        }
+
+        // --- DRAW GIANT IRON SPIDER 4 MECHANICAL LEGS WITH ULTRA SHARP RAZOR NEEDLE SPIKE TIPS ---
+        function drawIronSpiderMechLegs(ctx, spideyX, spideyY, deployProgress, gaitTimer, isVerticalWall) {
+            if (deployProgress <= 0.01) return;
+
+            ctx.save();
+            const armorGold = '#fbbf24';
+            const armorRed = '#dc2626';
+            const energyCyan = '#38bdf8';
+            const strokeDark = '#09090b';
+
+            const legConfigs = [
+                { sideX: -1, sideY: -1, archUp: -150, landX: isVerticalWall ? 110 : spideyX - 220, landY: isVerticalWall ? spideyY - 140 : ROOF_FLOOR_Y + 15, gaitOffset: 0 },
+                { sideX: -1, sideY: 1,  archUp: -70,  landX: isVerticalWall ? 110 : spideyX - 160, landY: isVerticalWall ? spideyY + 120 : ROOF_FLOOR_Y + 15, gaitOffset: Math.PI },
+                { sideX: 1,  sideY: -1, archUp: -150, landX: isVerticalWall ? spideyX + 180 : spideyX + 220, landY: isVerticalWall ? spideyY - 120 : ROOF_FLOOR_Y + 15, gaitOffset: Math.PI },
+                { sideX: 1,  sideY: 1,  archUp: -70,  landX: isVerticalWall ? spideyX + 160 : spideyX + 160, landY: isVerticalWall ? spideyY + 140 : ROOF_FLOOR_Y + 15, gaitOffset: 0 }
+            ];
+
+            legConfigs.forEach((cfg) => {
+                const gait = gaitTimer * 0.16 + cfg.gaitOffset;
+                const stepLiftProgress = Math.max(0, Math.sin(gait));
+                const gaitLift = Math.pow(stepLiftProgress, 1.8) * 42 * deployProgress;
+                const gaitStep = Math.cos(gait) * 28 * deployProgress;
+
+                const rootX = spideyX + cfg.sideX * 24;
+                const rootY = spideyY - 10 + cfg.sideY * 12;
+
+                const targetTipX = lerp(rootX, cfg.landX + gaitStep, deployProgress);
+                const targetTipY = lerp(rootY, cfg.landY - gaitLift, deployProgress);
+
+                const kneeX = lerp(rootX, targetTipX, 0.45) + cfg.sideX * 70 * deployProgress;
+                const kneeY = Math.min(rootY, targetTipY) + cfg.archUp * deployProgress;
+
+                const ankleX = lerp(kneeX, targetTipX, 0.6) + cfg.sideX * 25 * deployProgress;
+                const ankleY = lerp(kneeY, targetTipY, 0.6);
+
+                ctx.strokeStyle = strokeDark;
+                ctx.lineWidth = 11;
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
+
+                ctx.beginPath();
+                ctx.moveTo(rootX, rootY);
+                ctx.quadraticCurveTo(kneeX, kneeY, ankleX, ankleY);
+                ctx.stroke();
+
+                ctx.lineWidth = 6.5;
+                ctx.strokeStyle = armorGold;
+                ctx.beginPath();
+                ctx.moveTo(rootX, rootY);
+                ctx.quadraticCurveTo(kneeX, kneeY, ankleX, ankleY);
+                ctx.stroke();
+
+                ctx.strokeStyle = armorRed;
+                ctx.lineWidth = 4.5;
+                ctx.beginPath();
+                ctx.moveTo(kneeX, kneeY);
+                ctx.lineTo(ankleX, ankleY);
+                ctx.stroke();
+
+                const spikeAng = Math.atan2(targetTipY - ankleY, targetTipX - ankleX);
+                const perpAng = spikeAng + Math.PI / 2;
+                const baseWidth = 8.5;
+
+                const baseL_X = ankleX + Math.cos(perpAng) * baseWidth;
+                const baseL_Y = ankleY + Math.sin(perpAng) * baseWidth;
+                const baseR_X = ankleX - Math.cos(perpAng) * baseWidth;
+                const baseR_Y = ankleY - Math.sin(perpAng) * baseWidth;
+
+                ctx.fillStyle = armorGold;
+                ctx.strokeStyle = strokeDark;
+                ctx.lineWidth = 2.5;
+
+                ctx.beginPath();
+                ctx.moveTo(baseL_X, baseL_Y);
+                ctx.lineTo(targetTipX, targetTipY);
+                ctx.lineTo(baseR_X, baseR_Y);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1.8;
+                ctx.beginPath();
+                ctx.moveTo(ankleX, ankleY);
+                ctx.lineTo(targetTipX, targetTipY);
+                ctx.stroke();
+
+                ctx.fillStyle = energyCyan;
+                ctx.shadowColor = energyCyan;
+                ctx.shadowBlur = 15;
+
+                ctx.beginPath();
+                ctx.arc(kneeX, kneeY, 9, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.lineWidth = 2.5;
+                ctx.strokeStyle = strokeDark;
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.arc(ankleX, ankleY, 7, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.arc(targetTipX, targetTipY, 2, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.shadowBlur = 0;
+
+                if (deployProgress >= 0.9 && Math.abs(Math.sin(gait)) > 0.88 && Math.random() > 0.4) {
+                    activeParticles.push({
+                        x: targetTipX,
+                        y: targetTipY,
+                        vx: (Math.random() - 0.5) * 10,
+                        vy: (Math.random() - 0.5) * 10,
+                        life: 22,
+                        maxLife: 22,
+                        color: Math.random() > 0.5 ? '#fbbf24' : '#38bdf8',
+                        size: 3.5
+                    });
+                }
+            });
+
+            ctx.restore();
+        }
+
+        // --- STANDARD STANDING BODY & ANATOMY ---
+        function drawBodyAndSuit() {
+            const redSuit = '#c01118';
+            const blueSuit = '#0c4a6e';
+            const strokeColor = '#09090b';
+
+            ctx.save();
+            ctx.lineWidth = 5;
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+
+            const legSquatY = squatProgress * 45;
+            const legSpreadX = squatProgress * 25;
+
+            // Left Leg
+            ctx.fillStyle = blueSuit;
+            ctx.strokeStyle = strokeColor;
+            ctx.beginPath();
+            ctx.moveTo(250, 370);
+            ctx.quadraticCurveTo(210 - legSpreadX, 390 + legSquatY, 200, 440 + legSquatY * 0.4);
+            ctx.quadraticCurveTo(245, 455, 270, 395);
+            ctx.closePath();
+            ctx.fill(); ctx.stroke();
+
+            // Right Leg
+            ctx.beginPath();
+            ctx.moveTo(350, 370);
+            ctx.quadraticCurveTo(390 + legSpreadX, 390 + legSquatY, 400, 440 + legSquatY * 0.4);
+            ctx.quadraticCurveTo(355, 455, 330, 395);
+            ctx.closePath();
+            ctx.fill(); ctx.stroke();
+
+            // Left Red Boot
+            ctx.fillStyle = redSuit;
+            ctx.beginPath();
+            ctx.moveTo(200, 435 + legSquatY * 0.4);
+            ctx.quadraticCurveTo(180, 465 + legSquatY * 0.4, 195, 485 + legSquatY * 0.2);
+            ctx.quadraticCurveTo(245, 495, 255, 455 + legSquatY * 0.4);
+            ctx.closePath();
+            ctx.fill(); ctx.stroke();
+
+            // Right Red Boot
+            ctx.beginPath();
+            ctx.moveTo(400, 435 + legSquatY * 0.4);
+            ctx.quadraticCurveTo(420, 465 + legSquatY * 0.4, 405, 485 + legSquatY * 0.2);
+            ctx.quadraticCurveTo(355, 495, 345, 455 + legSquatY * 0.4);
+            ctx.closePath();
+            ctx.fill(); ctx.stroke();
+
+            // Torso
+            const torsoYOffset = squatProgress * 40;
+            ctx.fillStyle = redSuit;
+            ctx.strokeStyle = strokeColor;
+            ctx.beginPath();
+            ctx.moveTo(240, 280 + torsoYOffset);
+            ctx.lineTo(360, 280 + torsoYOffset);
+            ctx.quadraticCurveTo(375, 330 + torsoYOffset, 350, 385 + torsoYOffset * 0.5);
+            ctx.lineTo(250, 385 + torsoYOffset * 0.5);
+            ctx.quadraticCurveTo(225, 330 + torsoYOffset, 240, 280 + torsoYOffset);
+            ctx.closePath();
+            ctx.fill(); ctx.stroke();
+
+            // Blue Side Panels
+            ctx.fillStyle = blueSuit;
+            ctx.beginPath();
+            ctx.moveTo(237, 295 + torsoYOffset);
+            ctx.quadraticCurveTo(260, 330 + torsoYOffset, 256, 382 + torsoYOffset * 0.5);
+            ctx.lineTo(246, 382 + torsoYOffset * 0.5);
+            ctx.quadraticCurveTo(228, 335 + torsoYOffset, 237, 295 + torsoYOffset);
+            ctx.closePath();
+            ctx.fill(); ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(363, 295 + torsoYOffset);
+            ctx.quadraticCurveTo(340, 330 + torsoYOffset, 344, 382 + torsoYOffset * 0.5);
+            ctx.lineTo(354, 382 + torsoYOffset * 0.5);
+            ctx.quadraticCurveTo(372, 335 + torsoYOffset, 363, 295 + torsoYOffset);
+            ctx.closePath();
+            ctx.fill(); ctx.stroke();
+
+            // Spider Emblem
+            ctx.fillStyle = strokeColor;
+            ctx.beginPath();
+            ctx.ellipse(300, 325 + torsoYOffset, 5.5, 7.5, 0, 0, Math.PI * 2);
+            ctx.ellipse(300, 338 + torsoYOffset, 7.5, 10, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Arms
+            ctx.save();
+            ctx.translate(235, 295 + torsoYOffset);
+            const leftArmAngle = squatProgress > 0.3 ? 0.8 : (leftHandPose === 'THWIP' ? -0.5 : 0.1);
+            ctx.rotate(leftArmAngle);
+            ctx.fillStyle = redSuit;
+            ctx.strokeStyle = strokeColor;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.quadraticCurveTo(-45, 20, -78, 52);
+            ctx.quadraticCurveTo(-68, 72, -35, 42);
+            ctx.lineTo(10, 25);
+            ctx.closePath();
+            ctx.fill(); ctx.stroke();
+            ctx.translate(-75, 55);
+            drawFingersAndHand(ctx, true, leftHandPose);
+            ctx.restore();
+
+            ctx.save();
+            ctx.translate(365, 295 + torsoYOffset);
+            const rightArmAngle = squatProgress > 0.3 ? 1.4 : (rightHandPose === 'THWIP' ? 0.5 : -0.1);
+            ctx.rotate(rightArmAngle);
+            ctx.fillStyle = redSuit;
+            ctx.strokeStyle = strokeColor;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.quadraticCurveTo(45, 20, 78, 52 + squatProgress * 25);
+            ctx.quadraticCurveTo(68, 72, 35, 42);
+            ctx.lineTo(-10, 25);
+            ctx.closePath();
+            ctx.fill(); ctx.stroke();
+            ctx.translate(75, 55 + squatProgress * 25);
+            drawFingersAndHand(ctx, false, rightHandPose);
+            ctx.restore();
+
+            ctx.restore();
+        }
+
+        function drawHeadAndMask() {
+            const headYOffset = squatProgress * 45;
+            const cx = 300;
+            const cy = 168 + headYOffset;
+            const rx = 158;
+            const ry = 144;
+
+            ctx.save();
+            ctx.fillStyle = '#c01118';
+            ctx.strokeStyle = '#09090b';
+            ctx.lineWidth = 6.5;
+
+            ctx.beginPath();
+            ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // Web Lines
+            ctx.strokeStyle = '#09090b';
+            ctx.lineWidth = 2.2;
+            const webOriginX = cx;
+            const webOriginY = cy + 24;
+
+            const rayAngles = [
+                -Math.PI / 2, -Math.PI / 2.6, -Math.PI / 3.4, -Math.PI / 4.8,
+                -Math.PI / 8, 0, Math.PI / 8, Math.PI / 4.8,
+                Math.PI / 3.4, Math.PI / 2.6, Math.PI / 2
+            ];
+
+            rayAngles.forEach(angle => {
+                ctx.beginPath();
+                ctx.moveTo(webOriginX, webOriginY);
+                ctx.lineTo(cx + Math.cos(angle) * (rx + 4), cy + Math.sin(angle) * (ry + 4));
+                ctx.stroke();
+            });
+
+            [34, 62, 90, 120, 144].forEach(r => {
+                ctx.beginPath();
+                for (let a = 0; a <= Math.PI * 2; a += 0.2) {
+                    const wx = webOriginX + Math.cos(a) * r * 1.05;
+                    const wy = webOriginY + Math.sin(a) * r * 0.95;
+                    if (a === 0) ctx.moveTo(wx, wy);
+                    else ctx.lineTo(wx, wy);
+                }
+                ctx.closePath();
+                ctx.stroke();
+            });
+
+            ctx.restore();
+
+            drawExpressiveEyes(cx, cy);
+        }
+
+        function drawExpressiveEyes(cx, cy) {
+            let target = eyeMorphTemplates[currentEmotion] || eyeMorphTemplates['neutral'];
+            if (squatProgress > 0.3) target = eyeMorphTemplates['angry'];
+
+            const morphSpeed = 0.18;
+            eyeCurrent.innerTopY = lerp(eyeCurrent.innerTopY, target.innerTopY, morphSpeed);
+            eyeCurrent.outerTopY = lerp(eyeCurrent.outerTopY, target.outerTopY, morphSpeed);
+            eyeCurrent.innerBotY = lerp(eyeCurrent.innerBotY, target.innerBotY, morphSpeed);
+            eyeCurrent.outerBotY = lerp(eyeCurrent.outerBotY, target.outerBotY, morphSpeed);
+            eyeCurrent.tilt = lerp(eyeCurrent.tilt, target.tilt, morphSpeed);
+
+            drawSingleEye(cx - 74, cy + 10, true);
+            drawSingleEye(cx + 74, cy + 10, false);
+        }
+
+        function drawSingleEye(x, y, isLeft) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.scale(isLeft ? 1 : -1, 1);
+            ctx.rotate(eyeCurrent.tilt);
+
+            const pInnerTop = { x: 58, y: eyeCurrent.innerTopY };
+            const pOuterTop = { x: -56, y: eyeCurrent.outerTopY };
+            const pOuterBot = { x: -54, y: eyeCurrent.outerBotY };
+            const pInnerBot = { x: 34, y: eyeCurrent.innerBotY + 54 };
+
+            ctx.fillStyle = '#09090b';
+            ctx.beginPath();
+            ctx.moveTo(pInnerTop.x + 8, pInnerTop.y - 8);
+            ctx.quadraticCurveTo(0, pOuterTop.y - 24, pOuterTop.x - 14, pOuterTop.y);
+            ctx.quadraticCurveTo(pOuterTop.x - 24, 10, pOuterBot.x - 14, pOuterBot.y + 24);
+            ctx.quadraticCurveTo(-10, pInnerBot.y + 24, pInnerBot.x + 14, pInnerBot.y);
+            ctx.quadraticCurveTo(pInnerTop.x + 24, 20, pInnerTop.x + 8, pInnerTop.y - 8);
+            ctx.closePath();
+            ctx.fill();
+
+            const lensGrad = ctx.createLinearGradient(-35, -45, 25, 45);
+            lensGrad.addColorStop(0, '#ffffff');
+            lensGrad.addColorStop(0.8, '#f1f5f9');
+            lensGrad.addColorStop(1, '#cbd5e1');
+
+            ctx.fillStyle = lensGrad;
+            ctx.beginPath();
+            ctx.moveTo(pInnerTop.x, pInnerTop.y);
+            ctx.quadraticCurveTo(0, pOuterTop.y - 6, pOuterTop.x, pOuterTop.y);
+            ctx.quadraticCurveTo(pOuterTop.x - 6, 10, pOuterBot.x, pOuterBot.y);
+            ctx.quadraticCurveTo(-5, pInnerBot.y + 6, pInnerBot.x, pInnerBot.y);
+            ctx.quadraticCurveTo(pInnerTop.x + 6, 10, pInnerTop.x, pInnerTop.y);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.restore();
+        }
+
+        // --- DRAW WEBS, SHOCKWAVES & PARTICLES ---
+        function drawActiveWebsAndEffects() {
+            if (actionState === 'SWINGING') {
+                ctx.save();
+                ctx.strokeStyle = '#ffffff';
+                ctx.shadowColor = 'rgba(255, 255, 255, 0.9)';
+                ctx.shadowBlur = 12;
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(swingAnchor.x, swingAnchor.y);
+                ctx.lineTo(spideyPos.x, spideyPos.y);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            if (actionState === 'SLINGSHOT_PREP') {
+                ctx.save();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 4.5;
+                ctx.shadowColor = 'rgba(255, 255, 255, 0.9)';
+                ctx.shadowBlur = 10;
+                ctx.beginPath();
+                ctx.moveTo(80, 250); ctx.lineTo(spideyPos.x - 20, spideyPos.y);
+                ctx.moveTo(80, 320); ctx.lineTo(spideyPos.x + 20, spideyPos.y);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            if (actionState === 'HAMMOCK') {
+                ctx.save();
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.moveTo(420, 280); ctx.quadraticCurveTo(600, 380, 780, 280);
+                ctx.moveTo(420, 340); ctx.quadraticCurveTo(600, 420, 780, 340);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            for (let i = activeWebs.length - 1; i >= 0; i--) {
+                const web = activeWebs[i];
+                web.progress = Math.min(1, web.progress + 0.16);
+                web.life--;
+
+                const curX = lerp(web.startX, web.endX, web.progress);
+                const curY = lerp(web.startY, web.endY, web.progress);
+
+                ctx.save();
+                ctx.strokeStyle = '#ffffff';
+                ctx.shadowColor = 'rgba(255, 255, 255, 0.9)';
+                ctx.shadowBlur = 12;
+                ctx.lineWidth = 4;
+
+                ctx.beginPath();
+                ctx.moveTo(web.startX, web.startY);
+                ctx.lineTo(curX, curY);
+                ctx.stroke();
+
+                if (web.progress >= 0.75) {
+                    ctx.save();
+                    ctx.translate(web.endX, web.endY);
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.95)';
+                    ctx.lineWidth = 2.2;
+                    const netRadius = web.splatterRadius * web.progress;
+
+                    for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
+                        ctx.beginPath();
+                        ctx.moveTo(0, 0);
+                        ctx.lineTo(Math.cos(a) * netRadius, Math.sin(a) * netRadius);
+                        ctx.stroke();
+                    }
+
+                    for (let r = 12; r <= netRadius; r += 12) {
+                        ctx.beginPath();
+                        for (let a = 0; a <= Math.PI * 2; a += 0.3) {
+                            const rx = Math.cos(a) * r;
+                            const ry = Math.sin(a) * r;
+                            if (a === 0) ctx.moveTo(rx, ry);
+                            else ctx.lineTo(rx, ry);
+                        }
+                        ctx.closePath();
+                        ctx.stroke();
+                    }
+                    ctx.restore();
+                }
+
+                ctx.restore();
+                if (web.life <= 0) activeWebs.splice(i, 1);
+            }
+
+            for (let i = activeShockwaves.length - 1; i >= 0; i--) {
+                const s = activeShockwaves[i];
+                s.radius += 9;
+                s.alpha -= 0.035;
+
+                ctx.save();
+                ctx.strokeStyle = '#ef4444';
+                ctx.shadowColor = '#f59e0b';
+                ctx.shadowBlur = 6;
+                ctx.lineWidth = 6;
+                ctx.globalAlpha = Math.max(0, s.alpha);
+
+                ctx.beginPath();
+                ctx.ellipse(s.x, s.y, s.radius, s.radius * 0.3, 0, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.restore();
+
+                if (s.alpha <= 0 || s.radius >= s.maxRadius) {
+                    activeShockwaves.splice(i, 1);
+                }
+            }
+
+            for (let i = activeParticles.length - 1; i >= 0; i--) {
+                const p = activeParticles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life--;
+
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = Math.max(0, p.life / p.maxLife);
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+
+                if (p.life <= 0) activeParticles.splice(i, 1);
+            }
+            ctx.globalAlpha = 1.0;
+        }
+
+        // --- MAIN RENDER LOOP ---
+        function animate(now) {
+            frameCount++;
+            if (now - lastFrameTime >= 1000) {
+                fps = frameCount;
+                frameCount = 0;
+                lastFrameTime = now;
+                const fpsEl = document.getElementById('fpsCounter');
+                if (fpsEl) fpsEl.innerText = fps;
+            }
+
+            ctx.clearRect(0, 0, CANVAS_W, CANVAS_H);
+            globalAnimTime += 0.04;
+
+            updateStatePhysics();
+
+            ctx.save();
+            ctx.translate(cameraShake.x, cameraShake.y);
+
+            // 1. Draw City Backdrop (Fills 100% Window Height & Width)
+            drawCitySkylineBackdrop();
+
+            // 2. Idle breathing Y offset
+            let idleY = 0;
+            if (actionState === 'STANDING') {
+                idleY = Math.sin(globalAnimTime * 2.5) * 4;
+            }
+
+            // 3. Render Spidey Character & Giant Iron Spider Mech Legs Layer
+            ctx.save();
+
+            if (mechLegDeployProgress > 0) {
+                drawIronSpiderMechLegs(
+                    ctx,
+                    spideyPos.x,
+                    spideyPos.y,
+                    mechLegDeployProgress,
+                    stateTimer,
+                    actionState === 'MECH_WALL_CRAWL'
+                );
+            }
+
+            ctx.translate(spideyPos.x, spideyPos.y + idleY);
+            ctx.rotate(spideyRotation);
+            ctx.translate(-300, -270);
+
+            if ((actionState === 'STANDING' || actionState === 'SQUATTING' || actionState === 'HERO_LANDING_IMPACT') && mechLegDeployProgress < 0.2) {
+                ctx.save();
+                ctx.fillStyle = `rgba(0, 0, 0, ${0.45 + squatProgress * 0.15})`;
+                ctx.beginPath();
+                ctx.ellipse(300, 490, 110 + squatProgress * 25, 16 - squatProgress * 4, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            if (mechLegDeployProgress > 0.5 && actionState !== 'MECH_WALL_CRAWL') {
+                ctx.save();
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+                ctx.beginPath();
+                ctx.ellipse(300, 490 + (GROUND_Y - spideyPos.y), 130, 20, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+
+            if (actionState === 'CEILING') {
+                ctx.save();
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 3.5;
+                ctx.shadowColor = 'rgba(255,255,255,0.9)';
+                ctx.shadowBlur = 10;
+                ctx.beginPath();
+                ctx.moveTo(230, 430); ctx.lineTo(220, 600);
+                ctx.moveTo(370, 430); ctx.lineTo(380, 600);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            drawBodyAndSuit();
+            drawHeadAndMask();
+
+            ctx.restore();
+
+            // 4. Overlaid Webs & Visual FX
+            drawActiveWebsAndEffects();
+
+            ctx.restore();
+
+            requestAnimationFrame(animate);
+        }
+
+        window.onload = function () {
+            requestAnimationFrame(animate);
+        };
+    </script>
+</body>
+
+</html>
